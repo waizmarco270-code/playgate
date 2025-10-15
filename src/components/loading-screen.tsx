@@ -61,10 +61,6 @@ const BlueprintGrid = () => (
                  <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-cyan-400/50 animate-fade-in-out [animation-delay:0.5s]"></div>
             </div>
 
-             {/* Measurement text */}
-            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-cyan-400/50 font-mono text-xs animate-fade-in opacity-0 [animation-delay:1s]">300.00 px</span>
-            <span className="absolute -right-5 top-1/2 -translate-y-1/2 -rotate-90 text-cyan-400/50 font-mono text-xs animate-fade-in opacity-0 [animation-delay:1.2s]">300.00 px</span>
-
         </div>
     </div>
 );
