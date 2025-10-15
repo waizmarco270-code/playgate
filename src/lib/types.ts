@@ -1,5 +1,4 @@
 
-
 export interface VideoFile {
   id: string;
   name: string;
@@ -21,4 +20,12 @@ export interface StoredVideoFile extends VideoFile {
 export interface VideoFileHandle {
   id: string;
   handle: FileSystemFileHandle;
+}
+
+export interface Playlist {
+  id: string;
+  name: string;
+  description: string;
+  videoIds: string[];
+  createdAt: Date;
 }

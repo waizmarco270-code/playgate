@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -143,6 +144,14 @@ export default function HomePage() {
             <Button onClick={handleImportClick} className="mt-6">
               <Plus className="mr-2 h-4 w-4" /> Import Video
             </Button>
+          </div>
+        ) : filteredVideos.length === 0 && searchTerm ? (
+           <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="p-6 rounded-full bg-secondary mb-4">
+              <Search className="w-12 h-12 text-muted-foreground" />
+            </div>
+            <h2 className="text-2xl font-semibold">No Results Found</h2>
+            <p className="mt-2 text-muted-foreground">No videos match your search term "{searchTerm}".</p>
           </div>
         ) : (
           <VideoGrid>

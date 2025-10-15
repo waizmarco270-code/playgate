@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, ListPlus } from 'lucide-react';
 import type { VideoFile } from '@/lib/types';
 import { formatDuration } from '@/lib/utils';
 import {
@@ -18,6 +18,7 @@ import { Button } from './ui/button';
 import { db } from '@/lib/db';
 import { Progress } from './ui/progress';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
+import { AddToPlaylistDialog } from './add-to-playlist-dialog';
 
 interface VideoCardProps {
   video: VideoFile;
@@ -27,6 +28,7 @@ interface VideoCardProps {
 export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
 
   useEffect(() => {
     if (video.thumbnail) {
@@ -82,6 +84,10 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                   <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
+                    <ListPlus className="mr-2 h-4 w-4" />
+                    <span>Add to Playlist</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => setIsDeleteDialogOpen(true)} 
                     className="text-destructive focus:text-destructive focus:bg-destructive/10"
@@ -104,6 +110,11 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
         itemName={video.name}
+    />
+    <AddToPlaylistDialog
+      isOpen={isAddToPlaylistOpen}
+      onOpenChange={setIsAddToPlaylistOpen}
+      videoId={video.id}
     />
     </>
   );

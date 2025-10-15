@@ -1,12 +1,13 @@
 
 'use client';
 import { generateVideoThumbnail, getVideoDuration } from './utils';
-import type { VideoFile, VideoFileHandle, StoredVideoFile } from './types';
+import type { VideoFile, VideoFileHandle, StoredVideoFile, Playlist } from './types';
 
 const DB_NAME = 'WaizPlayDB';
-const DB_VERSION = 2; // Incremented version due to schema change
+const DB_VERSION = 3; // Incremented version due to schema change for playlists
 const VIDEO_STORE = 'videos';
 const FILE_HANDLE_STORE = 'fileHandles';
+const PLAYLIST_STORE = 'playlists';
 
 class IndexedDBManager {
   private db: IDBDatabase | null = null;
@@ -43,6 +44,9 @@ class IndexedDBManager {
         }
         if (!db.objectStoreNames.contains(FILE_HANDLE_STORE)) {
           db.createObjectStore(FILE_HANDLE_STORE, { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains(PLAYLIST_STORE)) {
+          db.createObjectStore(PLAYLIST_STORE, { keyPath: 'id' });
         }
       };
     });
@@ -108,13 +112,53 @@ class IndexedDBManager {
       const request = store.getAll();
       request.onsuccess = () => {
         // We don't need the `video` blob for the grid view, so we can remove it to save memory
-        const videos = (request.result as StoredVideoFile[]).map(({ video, ...rest }) => rest);
+        const videos = (request.result as StoredVideoFile[]).map(({ video, ...rest }) => rest).sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
         resolve(videos);
       }
       request.onerror = () => reject(request.error);
     });
   }
   
+  async getVideosByIds(ids: string[]): Promise<VideoFile[]> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(VIDEO_STORE, 'readonly');
+      const store = tx.objectStore(VIDEO_STORE);
+      const videos: VideoFile[] = [];
+      if (ids.length === 0) {
+        resolve([]);
+        return;
+      }
+      
+      const idSet = new Set(ids);
+      let count = 0;
+
+      store.openCursor().onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+        if (cursor) {
+          if (idSet.has(cursor.key as string)) {
+            const { video, ...rest } = cursor.value;
+            videos.push(rest);
+            count++;
+          }
+          if (count < idSet.size) {
+            cursor.continue();
+          } else {
+             // Re-order based on original IDs array
+            const orderedVideos = ids.map(id => videos.find(v => v.id === id)).filter(Boolean) as VideoFile[];
+            resolve(orderedVideos);
+          }
+        } else {
+          const orderedVideos = ids.map(id => videos.find(v => v.id === id)).filter(Boolean) as VideoFile[];
+          resolve(orderedVideos);
+        }
+      };
+
+      tx.onerror = () => reject(tx.error);
+    });
+}
+
+
   async getVideo(id: string): Promise<{ metadata: VideoFile, handle: FileSystemFileHandle | null, file: File | null } | null> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
@@ -199,6 +243,14 @@ class IndexedDBManager {
 
   async deleteVideo(id: string): Promise<void> {
     const db = await this.getDB();
+    // Also remove this video from any playlists
+    const playlists = await this.getAllPlaylists();
+    for (const playlist of playlists) {
+        if (playlist.videoIds.includes(id)) {
+            await this.removeVideoFromPlaylist(playlist.id, id);
+        }
+    }
+
     return new Promise((resolve, reject) => {
       const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
       tx.objectStore(VIDEO_STORE).delete(id);
@@ -208,12 +260,94 @@ class IndexedDBManager {
     });
   }
 
+  // PLAYLIST METHODS
+  async createPlaylist(name: string, description: string): Promise<Playlist> {
+    const db = await this.getDB();
+    const id = `playlist-${Date.now()}`;
+    const newPlaylist: Playlist = {
+      id,
+      name,
+      description,
+      videoIds: [],
+      createdAt: new Date(),
+    };
+
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PLAYLIST_STORE, 'readwrite');
+      const store = tx.objectStore(PLAYLIST_STORE);
+      store.add(newPlaylist);
+      tx.oncomplete = () => resolve(newPlaylist);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async getAllPlaylists(): Promise<Playlist[]> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PLAYLIST_STORE, 'readonly');
+      const store = tx.objectStore(PLAYLIST_STORE);
+      const request = store.getAll();
+      request.onsuccess = () => {
+        resolve((request.result as Playlist[]).sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime()));
+      };
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async getPlaylist(id: string): Promise<Playlist | null> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PLAYLIST_STORE, 'readonly');
+      const store = tx.objectStore(PLAYLIST_STORE);
+      const request = store.get(id);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async updatePlaylist(playlist: Playlist): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PLAYLIST_STORE, 'readwrite');
+      tx.objectStore(PLAYLIST_STORE).put(playlist);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async deletePlaylist(id: string): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(PLAYLIST_STORE, 'readwrite');
+      tx.objectStore(PLAYLIST_STORE).delete(id);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async addVideoToPlaylist(playlistId: string, videoId: string): Promise<void> {
+    const playlist = await this.getPlaylist(playlistId);
+    if (playlist && !playlist.videoIds.includes(videoId)) {
+      playlist.videoIds.push(videoId);
+      await this.updatePlaylist(playlist);
+    }
+  }
+
+  async removeVideoFromPlaylist(playlistId: string, videoId: string): Promise<void> {
+    const playlist = await this.getPlaylist(playlistId);
+    if (playlist) {
+      playlist.videoIds = playlist.videoIds.filter(id => id !== videoId);
+      await this.updatePlaylist(playlist);
+    }
+  }
+
   async clearDB(): Promise<void> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
+      const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE, PLAYLIST_STORE], 'readwrite');
       tx.objectStore(VIDEO_STORE).clear();
       tx.objectStore(FILE_HANDLE_STORE).clear();
+      tx.objectStore(PLAYLIST_STORE).clear();
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
@@ -221,5 +355,3 @@ class IndexedDBManager {
 }
 
 export const db = new IndexedDBManager();
-
-    
