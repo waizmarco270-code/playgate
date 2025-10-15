@@ -14,6 +14,7 @@ import { LoadingScreenProvider } from '@/components/providers/loading-screen-pro
 import { PrivacyPopup } from '@/components/privacy-popup';
 import { useState, useEffect } from 'react';
 import { Analytics } from '@vercel/analytics/react';
+import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 
 const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
@@ -67,6 +68,7 @@ export default function RootLayout({
           <LoadingScreenProvider>
             <VaultProvider>
               <SidebarProvider>
+                <PwaInstallPrompt />
                 <div className="flex min-h-screen">
                   <AppSidebar />
                   <SidebarInset>
