@@ -70,6 +70,7 @@ export default function PlayerPage() {
 
   useEffect(() => {
     const loadVideo = async () => {
+      if (!params?.id) return;
       setLoading(true);
       setError(null);
       hasStartedFromSavedTime.current = false;
@@ -131,12 +132,14 @@ export default function PlayerPage() {
       loadVideo();
     }
 
+    // This cleanup function will run when the component unmounts or when params.id changes
     return () => {
       if (videoUrl) {
         URL.revokeObjectURL(videoUrl);
+        setVideoUrl(null); // Clear the URL state
       }
     };
-  }, [params.id, playlistId, toast, videoUrl]);
+  }, [params.id, playlistId, toast]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -215,14 +218,14 @@ export default function PlayerPage() {
     }
     
     // Setup audio and text tracks
-    if (video.audioTracks) {
+    if (video.audioTracks && video.audioTracks.length > 0) {
       const audioTrackList = Array.from(video.audioTracks);
       setAudioTracks(audioTrackList);
       const enabledAudioTrack = audioTrackList.find(t => t.enabled);
       if(enabledAudioTrack) setSelectedAudioTrackId(enabledAudioTrack.id);
     }
 
-    if (video.textTracks) {
+    if (video.textTracks && video.textTracks.length > 0) {
       const textTrackList = Array.from(video.textTracks);
       setTextTracks(textTrackList);
       const visibleTextTrack = textTrackList.find(t => t.mode === 'showing');
@@ -444,7 +447,7 @@ export default function PlayerPage() {
                         <DropdownMenuRadioGroup value={selectedTextTrackId} onValueChange={handleTextTrackChange}>
                            <DropdownMenuRadioItem value="off">Off</DropdownMenuRadioItem>
                            {textTracks.map(track => (
-                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioe>
+                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
                           ))}
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
