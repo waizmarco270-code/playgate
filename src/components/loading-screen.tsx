@@ -5,70 +5,29 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
 import React from 'react';
-import { Camera, Clapperboard, Film, Headphones, Mic, Play, Repeat, Video } from 'lucide-react';
 
-const ICONS = [Camera, Clapperboard, Film, Headphones, Mic, Play, Repeat, Video];
+const ShutterEffect = () => (
+    <div className="absolute inset-0 z-20 pointer-events-none">
+        {/* The clip-path is animated via CSS to create the opening effect */}
+        <div className="w-full h-full bg-background animate-shutter-open" />
+    </div>
+);
+ShutterEffect.displayName = 'ShutterEffect';
 
-const DigitalStreamBackground = React.memo(() => {
-    const columns = Array.from({ length: 40 }).map((_, i) => i);
-
-    const randomIcon = () => {
-        const Icon = ICONS[Math.floor(Math.random() * ICONS.length)];
-        return <Icon key={Math.random()} className="h-4 w-4 shrink-0" />;
-    };
-    
-    const randomIconColumn = (count: number) => Array.from({ length: count }).map(randomIcon);
-
-    return (
-         <div className="absolute inset-0 overflow-hidden z-0">
-            {columns.map(i => (
-                <div 
-                    key={`col-${i}`} 
-                    className="absolute top-0 h-full text-primary/10 animate-rain-stream"
-                    style={{
-                        left: `${i * 2.5}%`,
-                        animationDuration: `${Math.random() * 20 + 15}s`,
-                        animationDelay: `${Math.random() * -35}s`,
-                    }}
-                >
-                   <div className="flex flex-col gap-4">
-                     {randomIconColumn(30)}
-                   </div>
-                </div>
-            ))}
+const FocusRing = () => (
+    <div className="absolute inset-0 flex items-center justify-center z-0">
+        <div className="relative w-48 h-48 md:w-64 md:h-64">
+            {/* Outer pulsating ring */}
+            <div className="absolute inset-0 rounded-full border-2 border-primary/20 animate-pulse-slow opacity-50"></div>
+            {/* Inner focus marks */}
+            <div className="absolute inset-4 rounded-full border border-dashed border-primary/20 animate-spin-slow-reverse"></div>
+             {/* Crosshairs */}
+            <div className="absolute top-1/2 left-0 w-full h-px bg-primary/20 animate-fade-in opacity-0 [animation-delay:0.5s]"></div>
+            <div className="absolute left-1/2 top-0 h-full w-px bg-primary/20 animate-fade-in opacity-0 [animation-delay:0.5s]"></div>
         </div>
-    );
-});
-DigitalStreamBackground.displayName = 'DigitalStreamBackground';
-
-const BlueprintGrid = React.memo(() => {
-    return (
-        <div className="absolute inset-0 z-10 flex items-center justify-center">
-            <div className="relative w-48 h-48 md:w-64 md:h-64">
-                {/* Main Grid */}
-                <div className="w-full h-full absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--primary)/0.1)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary)/0.1)_1px,transparent_1px)] bg-[size:1rem_1rem] animate-fade-in opacity-0"></div>
-                
-                {/* Scanner Lines */}
-                <div className="absolute inset-0 w-full h-full overflow-hidden">
-                    <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-primary to-transparent animate-draw-line-h"></div>
-                    <div className="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-transparent via-primary to-transparent animate-draw-line-v"></div>
-                </div>
-
-                {/* Corner Brackets */}
-                <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2 border-primary animate-spin-slow"></div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 border-t-2 border-r-2 border-primary animate-spin-slow" style={{animationDelay: '0.2s'}}></div>
-                <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-2 border-l-2 border-primary animate-spin-slow" style={{animationDelay: '0.3s'}}></div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2 border-primary animate-spin-slow" style={{animationDelay: '0.1s'}}></div>
-                
-                {/* Annotations */}
-                <span className="absolute -top-4 left-0 text-primary/50 text-xs font-mono animate-fade-in-out opacity-0" style={{animationDelay: '0.5s'}}>w:128px</span>
-                <span className="absolute -right-12 top-0 text-primary/50 text-xs font-mono animate-fade-in-out opacity-0" style={{animationDelay: '0.8s'}}>h:128px</span>
-                 <span className="absolute -bottom-4 right-0 text-primary/50 text-xs font-mono animate-fade-in-out opacity-0" style={{animationDelay: '1.2s'}}>r:8px</span>
-            </div>
-        </div>
-    )
-})
-BlueprintGrid.displayName = 'BlueprintGrid'
+    </div>
+)
+FocusRing.displayName = 'FocusRing'
 
 
 export function LoadingScreen({ progress }: { progress: number }) {
@@ -80,26 +39,22 @@ export function LoadingScreen({ progress }: { progress: number }) {
         visible: { opacity: 1, transition: { duration: 0.5, ease: 'easeOut' } },
         exit: { opacity: 0, transition: { duration: 0.8, ease: 'easeIn' } }
     };
-
+    
     const logoVariants = {
-        initial: { scale: 0.9, opacity: 0 },
-        animate: {
-            scale: [0.9, 1.05, 0.9],
+        initial: { scale: 0.8, opacity: 0 },
+        animate: { 
+            scale: 1, 
             opacity: 1,
-            transition: {
-                scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-                opacity: { duration: 0.5, ease: 'easeIn', delay: 1.5 } // Delay fade in
-            }
+            transition: { duration: 0.8, ease: [0.25, 1, 0.5, 1], delay: 0.5 }
         },
     };
 
     const textVariants = {
-        hidden: { y: 20, opacity: 0, letterSpacing: '0.1em' },
+        hidden: { y: 20, opacity: 0 },
         visible: { 
             y: 0, 
             opacity: 1, 
-            letterSpacing: '0.25em',
-            transition: { duration: 1.2, ease: [0.25, 1, 0.5, 1], delay: 0.3 }
+            transition: { duration: 1, ease: [0.25, 1, 0.5, 1], delay: 0.8 }
         }
     };
     
@@ -116,25 +71,25 @@ export function LoadingScreen({ progress }: { progress: number }) {
             exit="exit"
             className={cn(
                 "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none",
-                isDark ? "bg-black" : "bg-white",
-                "bg-gradient-to-br from-background via-background to-primary/5 animate-gradient-shift"
+                isDark ? "bg-black" : "bg-neutral-900",
             )}
         >
-            {/* Digital Stream Effect */}
-            <DigitalStreamBackground />
+            {/* The Shutter Layer is on top and animates to reveal content */}
+            <ShutterEffect />
+            
+            {/* The content that gets revealed */}
+            <div className="relative z-10 flex flex-col items-center justify-center text-center p-4">
+                
+                <FocusRing />
 
-            {/* Blueprint Grid */}
-            <BlueprintGrid />
-
-            <div className="relative z-20 flex flex-col items-center justify-center text-center p-4 rounded-full bg-background/80 backdrop-blur-sm">
                 {/* Logo with Glow */}
                 <motion.div
-                    className="relative w-24 h-24 md:w-32 md:h-32"
+                    className="relative w-24 h-24 md:w-32 md:h-32 z-10"
                     variants={logoVariants}
                     initial="initial"
                     animate="animate"
                 >
-                    <div className="absolute -inset-4 bg-primary/30 blur-2xl rounded-full animate-pulse-glow"></div>
+                    <div className="absolute -inset-4 bg-primary/30 blur-2xl rounded-full animate-pulse-glow [animation-delay:1s]"></div>
                     <Image
                         src="https://picsum.photos/seed/logo/128/128"
                         alt="PlayGate Logo"
@@ -152,7 +107,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-6 font-headline font-extrabold text-2xl md:text-3xl uppercase tracking-[0.25em] ml-[0.25em]",
-                        "text-foreground"
+                        "text-white"
                     )}
                 >
                     PlayGate
@@ -160,12 +115,12 @@ export function LoadingScreen({ progress }: { progress: number }) {
 
                 {/* Tagline */}
                 <motion.p
-                    variants={signatureVariants(0.8)}
+                    variants={signatureVariants(1)}
                     initial="hidden"
                     animate="visible"
                     className={cn(
                         "mt-2 text-sm tracking-widest",
-                        "text-muted-foreground"
+                        "text-white/70"
                     )}
                 >
                     Enter Your World of Play.
@@ -175,7 +130,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
             {/* Signature & Progress Zone */}
             <div className="absolute bottom-6 md:bottom-10 text-center w-full max-w-xs px-4 z-10">
                  <motion.p
-                    variants={signatureVariants(1.2)}
+                    variants={signatureVariants(1.5)}
                     initial="hidden"
                     animate="visible"
                     style={{fontFamily: 'Audiowide, sans-serif'}}
@@ -189,7 +144,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-2 text-xs italic",
-                        "text-foreground/70"
+                        "text-white/50"
                     )}
                  >
                     Developed by Waiz Marco
