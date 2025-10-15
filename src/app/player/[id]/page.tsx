@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { VideoFile } from '@/lib/types';
-import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info } from 'lucide-react';
+import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDuration, formatBytes } from '@/lib/utils';
@@ -231,7 +231,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="flex flex-col h-full bg-background text-foreground">
-      <header className="p-4 flex items-center gap-4 border-b shrink-0">
+      <header className="p-4 flex items-center gap-2 border-b shrink-0">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft />
         </Button>
@@ -239,7 +239,14 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
             <h1 className="text-xl font-bold truncate" title={videoMetadata.name}>{videoMetadata.name}</h1>
             <p className="text-sm text-muted-foreground">Added on {new Date(videoMetadata.createdAt).toLocaleDateString()}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
+            <Button variant="ghost" size="icon" disabled>
+                <SkipBack className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" disabled>
+                <SkipForward className="h-5 w-5" />
+            </Button>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -310,5 +317,3 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
-
-    
