@@ -15,16 +15,17 @@ const LoadingScreenContext = createContext<{
 export const useLoadingScreen = () => useContext(LoadingScreenContext);
 
 export function LoadingScreenProvider({ children }: { children: ReactNode }) {
-  const [isFirstVisit, setIsFirstVisit] = useState<boolean | undefined>(undefined);
-  const [isAnimationActive, setIsAnimationActive] = useState(true);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // This effect runs only once on mount to determine if we should show the animation.
-    const firstVisitSession = !sessionStorage.getItem('playgate-session-started');
-    setIsFirstVisit(firstVisitSession);
-
-    if (firstVisitSession) {
+    // This effect runs only once on mount.
+    if (sessionStorage.getItem('playgate-session-started')) {
+      setIsFirstVisit(false);
+      setIsAnimationComplete(true);
+    } else {
+      setIsFirstVisit(true);
       sessionStorage.setItem('playgate-session-started', 'true');
       
       // Start progress bar interval
@@ -40,20 +41,17 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
 
       // Set a timeout to end the animation
       const animationTimeout = setTimeout(() => {
-        setIsAnimationActive(false);
+        setIsAnimationComplete(true);
       }, LOADING_DURATION);
 
       return () => {
         clearInterval(interval);
         clearTimeout(animationTimeout);
       };
-    } else {
-      // If it's not the first visit, end the animation immediately.
-      setIsAnimationActive(false);
     }
   }, []);
 
-  const shouldShowAnimation = isFirstVisit === true && isAnimationActive;
+  const shouldShowAnimation = isFirstVisit && !isAnimationComplete;
 
   return (
     <LoadingScreenContext.Provider value={{ isLoading: shouldShowAnimation }}>
@@ -61,8 +59,8 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
         {shouldShowAnimation && <LoadingScreen progress={progress} />}
       </AnimatePresence>
       
-      {/* Only render children if the session has started and animation is complete */}
-      {!shouldShowAnimation && isFirstVisit !== undefined && children}
+      {/* Only render children if the session is not the first visit OR the animation is complete */}
+      {!shouldShowAnimation && children}
     </LoadingScreenContext.Provider>
   );
 }
