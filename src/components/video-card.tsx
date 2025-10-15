@@ -17,6 +17,7 @@ import {
 import { Button } from './ui/button';
 import { db } from '@/lib/db';
 import { Progress } from './ui/progress';
+import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 
 interface VideoCardProps {
   video: VideoFile;
@@ -25,6 +26,7 @@ interface VideoCardProps {
 
 export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (video.thumbnail) {
@@ -34,18 +36,15 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
     }
   }, [video.thumbnail]);
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (confirm(`Are you sure you want to delete "${video.name}"?`)) {
-      await db.deleteVideo(video.id);
-      onVideoDeleted(video.id);
-    }
+  const handleDeleteConfirm = async () => {
+    await db.deleteVideo(video.id);
+    onVideoDeleted(video.id);
   };
 
   const formattedDuration = useMemo(() => formatDuration(video.duration), [video.duration]);
 
   return (
+    <>
     <Link href={`/player/${video.id}`} className="group block">
       <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1">
         <CardContent className="p-0">
@@ -83,7 +82,10 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
-                  <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                  <DropdownMenuItem 
+                    onClick={() => setIsDeleteDialogOpen(true)} 
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
                     <Trash2 className="mr-2 h-4 w-4" />
                     <span>Delete</span>
                   </DropdownMenuItem>
@@ -97,5 +99,12 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
         </CardContent>
       </Card>
     </Link>
+    <DeleteConfirmationDialog 
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        itemName={video.name}
+    />
+    </>
   );
 }
