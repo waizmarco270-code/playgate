@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { LoadingScreen } from '@/components/loading-screen';
 import { AnimatePresence } from 'framer-motion';
 
-const LOADING_DURATION = 5000; // 5 seconds
+const LOADING_DURATION = 10000; // 10 seconds
 const SESSION_KEY = 'playgate-session-started';
 const OLD_LOCALSTORAGE_KEY = 'playgate-show-animation'; // The old key we need to remove
 
