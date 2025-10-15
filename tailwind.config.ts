@@ -10,9 +10,6 @@ export default {
   ],
   theme: {
     extend: {
-      animationDuration: {
-        '10s': '10s',
-      },
       fontFamily: {
         body: ['Poppins', 'sans-serif'],
         headline: ['Poppins', 'sans-serif'],
@@ -94,108 +91,10 @@ export default {
             height: '0',
           },
         },
-        'pulse-glow': {
-          '0%, 100%': { transform: 'scale(1)', opacity: '0.5' },
-          '50%': { transform: 'scale(1.5)', opacity: '0.2' },
-        },
-        shimmer: {
-          '0%': { backgroundPosition: '200% 0' },
-          '100%': { backgroundPosition: '-200% 0' },
-        },
-         'fade-in': {
-          from: { opacity: '0' },
-          to: { opacity: '1' },
-        },
-        'fade-in-out': {
-            '0%, 100%': { opacity: '0' },
-            '50%': { opacity: '1' },
-        },
-        'spin-slow': {
-          from: { transform: 'rotate(0deg)' },
-          to: { transform: 'rotate(360deg)' },
-        },
-        'spin-slow-reverse': {
-          from: { transform: 'rotate(360deg)' },
-          to: { transform: 'rotate(0deg)' },
-        },
-        'gradient-shift': {
-            '0%, 100%': { 'background-position': '0% 50%' },
-            '50%': { 'background-position': '100% 50%' },
-        },
-        'rain-1': {
-            '0%': { transform: 'translate(10vw, -25vh) scale(0.7)', opacity: '0' },
-            '1%': { opacity: '1' },
-            '90%': { opacity: '1' },
-            '100%': { transform: 'translate(15vw, 125vh) scale(0.5)', opacity: '0' },
-        },
-        'rain-2': {
-            '0%': { transform: 'translate(25vw, -25vh) scale(0.8)', opacity: '0' },
-            '1%': { opacity: '1' },
-            '90%': { opacity: '1' },
-            '100%': { transform: 'translate(20vw, 125vh) scale(0.6)', opacity: '0' },
-        },
-        'rain-3': {
-            '0%': { transform: 'translate(40vw, -25vh) scale(0.6)', opacity: '0' },
-            '1%': { opacity: '1' },
-            '90%': { opacity: '1' },
-            '100%': { transform: 'translate(35vw, 125vh) scale(0.4)', opacity: '0' },
-        },
-        'rain-4': {
-            '0%': { transform: 'translate(55vw, -25vh) scale(0.9)', opacity: '0' },
-            '1%': { opacity: '1' },
-            '90%': { opacity: '1' },
-            '100%': { transform: 'translate(50vw, 125vh) scale(0.7)', opacity: '0' },
-        },
-        'rain-5': {
-            '0%': { transform: 'translate(70vw, -25vh) scale(0.5)', opacity: '0' },
-            '1%': { opacity: '1' },
-            '90%': { opacity: '1' },
-            '100%': { transform: 'translate(65vw, 125vh) scale(0.3)', opacity: '0' },
-        },
-        'rain-6': {
-            '0%': { transform: 'translate(85vw, -25vh) scale(0.7)', opacity: '0' },
-            '1%': { opacity: '1' },
-            '90%': { opacity: '1' },
-            '100%': { transform: 'translate(80vw, 125vh) scale(0.5)', opacity: '0' },
-        },
-        'rain-7': {
-            '0%': { transform: 'translate(95vw, -25vh) scale(0.8)', opacity: '0' },
-            '1%': { opacity: '1' },
-            '90%': { opacity: '1' },
-            '100%': { transform: 'translate(90vw, 125vh) scale(0.6)', opacity: '0' },
-        },
-         'draw-line-h': {
-            '0%': { width: '0%', left: '0' },
-            '45%': { width: '100%', left: '0' },
-            '55%': { width: '100%', left: '0' },
-            '100%': { width: '0%', left: '100%' },
-        },
-        'draw-line-v': {
-            '0%': { height: '0%', top: '0' },
-            '45%': { height: '100%', top: '0' },
-            '55%': { height: '100%', top: '0' },
-            '100%': { height: '0%', top: '100%' },
-        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'pulse-glow': 'pulse-glow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        shimmer: 'shimmer 3s linear infinite',
-        'fade-in': 'fade-in 1s ease-out forwards',
-        'fade-in-out': 'fade-in-out 3s ease-in-out infinite',
-        'spin-slow': 'spin-slow 10s linear infinite',
-        'spin-slow-reverse': 'spin-slow-reverse 15s linear infinite',
-        'gradient-shift': 'gradient-shift 15s ease infinite',
-        'rain-1': 'rain-1 linear infinite',
-        'rain-2': 'rain-2 linear infinite',
-        'rain-3': 'rain-3 linear infinite',
-        'rain-4': 'rain-4 linear infinite',
-        'rain-5': 'rain-5 linear infinite',
-        'rain-6': 'rain-6 linear infinite',
-        'rain-7': 'rain-7 linear infinite',
-        'draw-line-h': 'draw-line-h 2.5s ease-in-out infinite',
-        'draw-line-v': 'draw-line-v 2.5s ease-in-out infinite',
       },
     },
   },

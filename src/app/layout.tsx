@@ -7,7 +7,6 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/app-sidebar';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
-import { LoadingScreenProvider } from '@/components/providers/loading-screen-provider';
 import BottomNav from '@/components/layout/bottom-nav';
 import { VaultProvider } from '@/components/providers/vault-provider';
 
@@ -36,20 +35,18 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased')}>
         <ThemeProvider>
-            <LoadingScreenProvider>
-              <VaultProvider>
-                <SidebarProvider>
-                  <div className="flex min-h-screen">
-                    <AppSidebar />
-                    <SidebarInset>
-                      <div className="md:pb-0 pb-20 h-full">{children}</div>
-                    </SidebarInset>
-                  </div>
-                  <BottomNav />
-                </SidebarProvider>
-              </VaultProvider>
-              <Toaster />
-            </LoadingScreenProvider>
+            <VaultProvider>
+              <SidebarProvider>
+                <div className="flex min-h-screen">
+                  <AppSidebar />
+                  <SidebarInset>
+                    <div className="md:pb-0 pb-20 h-full">{children}</div>
+                  </SidebarInset>
+                </div>
+                <BottomNav />
+              </SidebarProvider>
+            </VaultProvider>
+            <Toaster />
         </ThemeProvider>
         <Script id="service-worker-registration">
           {`
