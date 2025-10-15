@@ -3,7 +3,21 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { 
+    Film, 
+    Video, 
+    Camera, 
+    Clapperboard, 
+    PlayCircle, 
+    MonitorPlay, 
+    Image as ImageIcon, 
+    Headphones, 
+    Mic, 
+    Music 
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 
 const GridBackground = () => (
   <div className="absolute inset-0 z-0 h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_60%,transparent_100%)]"></div>
@@ -45,6 +59,49 @@ const GlitchyBits = () => {
     )
 }
 
+const iconList = [Film, Video, Camera, Clapperboard, PlayCircle, MonitorPlay, ImageIcon, Headphones, Mic, Music];
+
+const IconRain = () => {
+    const [icons, setIcons] = useState<any[]>([]);
+
+    useEffect(() => {
+        const generateIcons = () => {
+            const newIcons = Array.from({ length: 50 }).map((_, i) => {
+                const Icon = iconList[Math.floor(Math.random() * iconList.length)];
+                const style = {
+                    left: `${Math.random() * 100}vw`,
+                    animationDuration: `${Math.random() * 5 + 5}s`, // 5s to 10s
+                    animationDelay: `${Math.random() * 5}s`,
+                    opacity: Math.random() * 0.15 + 0.05, // 0.05 to 0.2
+                };
+                const size = Math.random() * 24 + 16; // 16px to 40px
+                return {
+                    id: i,
+                    Icon,
+                    style,
+                    size,
+                };
+            });
+            setIcons(newIcons);
+        };
+        generateIcons();
+    }, []);
+
+    return (
+        <div className="absolute inset-0 z-0 overflow-hidden">
+            {icons.map(({ id, Icon, style, size }) => (
+                <Icon
+                    key={id}
+                    className="absolute text-cyan-400/30 animate-fall"
+                    style={style}
+                    size={size}
+                    strokeWidth={1.5}
+                />
+            ))}
+        </div>
+    );
+};
+
 
 export const LoadingScreen = () => {
     const [progress, setProgress] = useState(0);
@@ -69,10 +126,11 @@ export const LoadingScreen = () => {
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5, delay: 0.5 }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a0f18] text-gray-300"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0a0f18] text-gray-300 overflow-hidden"
     >
         <GridBackground />
         <GlitchyBits />
+        <IconRain />
 
         <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
@@ -100,16 +158,16 @@ export const LoadingScreen = () => {
                 </div>
             </motion.div>
             
-            <h1 className="font-futuristic text-5xl md:text-6xl font-bold tracking-widest text-gray-100 uppercase">
+            <h1 style={{fontFamily: "'Orbitron', sans-serif"}} className="text-5xl md:text-6xl font-bold tracking-widest text-gray-100 uppercase">
               PLAYGATE
             </h1>
-            <p className="font-tech text-lg md:text-xl text-cyan-400/80 mt-2 tracking-wider">
+            <p style={{fontFamily: "'Audiowide', sans-serif"}} className="text-lg md:text-xl text-cyan-400/80 mt-2 tracking-wider">
               Enter Your World of Play.
             </p>
         </motion.div>
 
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-full max-w-sm text-center">
-             <div className="font-tech text-sm text-cyan-400">Powered by EmityGate</div>
+             <div style={{fontFamily: "'Audiowide', sans-serif"}} className="text-sm text-cyan-400">Powered by EmityGate</div>
              <div className="text-xs text-gray-500">Developed by Waiz Marco</div>
 
             <div className="w-full bg-gray-700/50 rounded-full h-2.5 mt-4 overflow-hidden border border-cyan-900/50">
@@ -120,7 +178,7 @@ export const LoadingScreen = () => {
                     transition={{ duration: 0.4, ease: 'easeInOut' }}
                 />
             </div>
-             <p className="font-code text-cyan-400 text-sm mt-2">{Math.round(progress)}%</p>
+             <p className="font-mono text-cyan-400 text-sm mt-2">{Math.round(progress)}%</p>
         </div>
     </motion.div>
   );
