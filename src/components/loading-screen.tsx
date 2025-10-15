@@ -150,4 +150,3 @@ export function LoadingScreen({ progress }: { progress: number }) {
         </motion.div>
     );
 }
-
