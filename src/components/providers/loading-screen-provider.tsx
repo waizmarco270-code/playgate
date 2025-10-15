@@ -20,7 +20,6 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // --- Cleanup: Remove the old, unused localStorage key ---
-    // This is the crucial fix. It cleans up the old setting that was causing the issue.
     localStorage.removeItem(OLD_LOCALSTORAGE_KEY);
     // ---------------------------------------------------------
 
