@@ -91,6 +91,10 @@ export default function HomePage() {
       description: "The video has been removed from your library.",
     });
   }
+  
+  const onVideoRenamed = (updatedVideo: VideoFile) => {
+    setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+  }
 
   const toggleSelectionMode = () => {
     setIsSelectionMode(!isSelectionMode);
@@ -219,7 +223,8 @@ export default function HomePage() {
           <VideoGrid>
             <VideoGrid.Content 
                 videos={filteredVideos} 
-                onVideoDeleted={onVideoDeleted} 
+                onVideoDeleted={onVideoDeleted}
+                onVideoRenamed={onVideoRenamed}
                 context="library"
                 isSelectionMode={isSelectionMode}
                 selectedVideoIds={selectedVideoIds}
@@ -239,3 +244,5 @@ export default function HomePage() {
     </>
   );
 }
+
+    

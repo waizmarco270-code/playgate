@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2 } from 'lucide-react';
+import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2, Edit } from 'lucide-react';
 import type { VideoFile } from '@/lib/types';
 import { formatDuration, cn } from '@/lib/utils';
 import {
@@ -19,10 +19,12 @@ import { db } from '@/lib/db';
 import { Progress } from './ui/progress';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 import { AddToPlaylistDialog } from './add-to-playlist-dialog';
+import { RenameVideoDialog } from './rename-video-dialog';
 
 interface VideoCardProps {
   video: VideoFile;
   onVideoDeleted: (videoId: string) => void;
+  onVideoRenamed: (updatedVideo: VideoFile) => void;
   onVideoRemovedFromPlaylist?: (videoId: string) => void;
   context?: 'library' | 'playlist';
   playlistId?: string;
@@ -35,6 +37,7 @@ interface VideoCardProps {
 export function VideoCard({ 
   video, 
   onVideoDeleted,
+  onVideoRenamed,
   onVideoRemovedFromPlaylist,
   context = 'library',
   playlistId,
@@ -46,6 +49,7 @@ export function VideoCard({
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
 
   useEffect(() => {
     let url: string | null = null;
@@ -74,6 +78,11 @@ export function VideoCard({
       e.preventDefault();
       onSelect(video.id);
     }
+  }
+
+  const handleVideoRenamed = (updatedVideo: VideoFile) => {
+    onVideoRenamed(updatedVideo);
+    setIsRenameDialogOpen(false);
   }
 
   const formattedDuration = useMemo(() => formatDuration(video.duration), [video.duration]);
@@ -146,6 +155,10 @@ export function VideoCard({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => { e.stopPropagation(); }}>
+                      <DropdownMenuItem onClick={() => setIsRenameDialogOpen(true)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>Rename</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
                         <ListPlus className="mr-2 h-4 w-4" />
                         <span>Add to Playlist</span>
@@ -184,6 +197,12 @@ export function VideoCard({
           isOpen={isAddToPlaylistOpen}
           onOpenChange={setIsAddToPlaylistOpen}
           videoIds={[video.id]}
+        />
+        <RenameVideoDialog
+            isOpen={isRenameDialogOpen}
+            onOpenChange={setIsRenameDialogOpen}
+            video={video}
+            onVideoRenamed={handleVideoRenamed}
         />
       </>
     );
@@ -239,6 +258,10 @@ export function VideoCard({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                      <DropdownMenuItem onClick={() => setIsRenameDialogOpen(true)}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        <span>Rename</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
                         <ListPlus className="mr-2 h-4 w-4" />
                         <span>Add to Playlist</span>
@@ -283,6 +306,14 @@ export function VideoCard({
       onOpenChange={setIsAddToPlaylistOpen}
       videoIds={[video.id]}
     />
+     <RenameVideoDialog
+        isOpen={isRenameDialogOpen}
+        onOpenChange={setIsRenameDialogOpen}
+        video={video}
+        onVideoRenamed={handleVideoRenamed}
+    />
     </>
   );
 }
+
+    

@@ -55,6 +55,11 @@ export default function PlaylistDetailPage() {
         });
     }
 
+    const onVideoRenamed = (updatedVideo: VideoFile) => {
+        setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+    }
+
+
     const handleRemoveVideoFromPlaylist = async (videoId: string) => {
         if (!playlist) return;
         try {
@@ -180,6 +185,7 @@ export default function PlaylistDetailPage() {
                                     video={video}
                                     onVideoDeleted={onVideoDeletedFromLibrary} 
                                     onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
+                                    onVideoRenamed={onVideoRenamed}
                                     context="playlist"
                                     playlistId={playlist.id}
                                     layout="list"
@@ -195,3 +201,5 @@ export default function PlaylistDetailPage() {
         </div>
     );
 }
+
+    

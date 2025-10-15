@@ -241,6 +241,30 @@ class IndexedDBManager {
     });
   }
 
+  async updateVideoName(id: string, name: string): Promise<VideoFile> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(VIDEO_STORE, 'readwrite');
+        const store = tx.objectStore(VIDEO_STORE);
+        const request = store.get(id);
+
+        request.onsuccess = () => {
+            const videoData = request.result;
+            if (videoData) {
+                videoData.name = name;
+                store.put(videoData);
+                const { video, ...rest } = videoData;
+                resolve(rest);
+            } else {
+                reject("Video not found");
+            }
+        };
+        tx.oncomplete = () => {};
+        tx.onerror = () => reject(tx.error);
+    });
+  }
+
+
   async deleteVideo(id: string): Promise<void> {
     const db = await this.getDB();
     // Also remove this video from any playlists
@@ -363,3 +387,5 @@ class IndexedDBManager {
 }
 
 export const db = new IndexedDBManager();
+
+    

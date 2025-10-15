@@ -11,7 +11,8 @@ interface VideoGridProps {
 
 const VideoGridContent = ({ 
     videos, 
-    onVideoDeleted, 
+    onVideoDeleted,
+    onVideoRenamed,
     onVideoRemovedFromPlaylist,
     context = 'library',
     playlistId,
@@ -21,6 +22,7 @@ const VideoGridContent = ({
 }: { 
     videos: VideoFile[], 
     onVideoDeleted: (videoId: string) => void,
+    onVideoRenamed: (updatedVideo: VideoFile) => void,
     onVideoRemovedFromPlaylist?: (videoId: string) => void,
     context?: 'library' | 'playlist',
     playlistId?: string,
@@ -41,7 +43,8 @@ const VideoGridContent = ({
         >
           <VideoCard 
             video={video} 
-            onVideoDeleted={onVideoDeleted} 
+            onVideoDeleted={onVideoDeleted}
+            onVideoRenamed={onVideoRenamed}
             onVideoRemovedFromPlaylist={onVideoRemovedFromPlaylist}
             context={context}
             playlistId={playlistId}
@@ -64,3 +67,5 @@ export function VideoGrid({ children }: VideoGridProps) {
 }
 
 VideoGrid.Content = VideoGridContent;
+
+    
