@@ -4,12 +4,15 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
 import type { Playlist } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FolderKanban, Plus, Film } from "lucide-react";
+import { FolderKanban, Plus, Film, FolderDown } from "lucide-react";
 import { PlaylistCard } from '@/components/playlist-card';
 import { CreatePlaylistDialog } from '@/components/create-playlist-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import type { FileSystemFileHandle } from 'wicg-file-system-access';
+
+const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska'];
 
 export default function PlaylistsPage() {
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -54,6 +57,72 @@ export default function PlaylistsPage() {
     const handlePlaylistUpdated = () => {
         loadPlaylists();
     }
+    
+    const handleImportFolder = async () => {
+        if (typeof window.showDirectoryPicker !== 'function') {
+            toast({
+                title: "Browser Not Supported",
+                description: "Your browser does not support folder imports. Please try a different browser like Chrome or Edge.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        try {
+            const directoryHandle = await window.showDirectoryPicker();
+            
+            toast({
+                title: `Importing "${directoryHandle.name}"`,
+                description: "Scanning folder for videos...",
+            });
+
+            const videoFiles: { file: File, handle: FileSystemFileHandle }[] = [];
+            for await (const entry of directoryHandle.values()) {
+                if (entry.kind === 'file' && entry.name.match(/\.(mp4|webm|ogg|mov|mkv)$/i)) {
+                    const file = await entry.getFile();
+                     if (ACCEPTED_VIDEO_TYPES.some(type => file.type.startsWith(type))) {
+                        videoFiles.push({ file, handle: entry });
+                    }
+                }
+            }
+
+            if (videoFiles.length === 0) {
+                toast({
+                    title: "No Videos Found",
+                    description: `The folder "${directoryHandle.name}" does not contain any supported video files.`,
+                    variant: "destructive",
+                });
+                return;
+            }
+
+            const newPlaylist = await db.createPlaylist(directoryHandle.name, `Imported from folder`);
+
+            for (const { file, handle } of videoFiles) {
+                await db.addVideo(file, handle);
+                await db.addVideoToPlaylist(newPlaylist.id, `${file.name}-${file.lastModified}`);
+            }
+
+            toast({
+                title: "Import Complete",
+                description: `Created playlist "${newPlaylist.name}" with ${videoFiles.length} videos.`,
+            });
+            
+            loadPlaylists();
+
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                // User cancelled the picker
+                return;
+            }
+            console.error("Failed to import folder:", error);
+            toast({
+                title: "Import Failed",
+                description: "Could not import the selected folder.",
+                variant: "destructive",
+            });
+        }
+    }
+
 
   return (
     <>
@@ -63,9 +132,14 @@ export default function PlaylistsPage() {
                 <SidebarTrigger className="md:hidden" />
                 <h1 className="text-2xl font-bold">Playlists</h1>
             </div>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" /> Create Playlist
-            </Button>
+            <div className="flex items-center gap-2">
+                 <Button variant="outline" onClick={handleImportFolder}>
+                    <FolderDown className="mr-2 h-4 w-4" /> Import Folder
+                </Button>
+                <Button onClick={() => setIsCreateDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" /> Create Playlist
+                </Button>
+            </div>
         </header>
         <main className="flex-1 p-6 overflow-y-auto">
             {loading ? (

@@ -105,43 +105,56 @@ class IndexedDBManager {
 
     return new Promise(async (resolve, reject) => {
       try {
-        const [thumbnail, duration] = await Promise.all([
-            generateVideoThumbnail(file),
-            getVideoDuration(file),
-        ]);
+        const existingVideoRequest = db.transaction(VIDEO_STORE, 'readonly').objectStore(VIDEO_STORE).get(id);
+        existingVideoRequest.onsuccess = async () => {
+            if (existingVideoRequest.result) {
+                 const { video, ...rest } = existingVideoRequest.result;
+                // If video already exists, just resolve it.
+                resolve(rest);
+                return;
+            }
 
-        const videoData: StoredVideoFile = {
-          id,
-          name: file.name,
-          thumbnail,
-          duration,
-          lastPlayed: 0,
-          createdAt: new Date(),
-          favorited: false,
-          size: file.size,
-          type: file.type,
-          video: file, // Store the file blob itself
-          currentTime: 0,
-          progress: 0,
-          isVaulted: false,
-        };
-        
-        const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
-        tx.objectStore(VIDEO_STORE).put(videoData);
+            // If video doesn't exist, create it.
+            const [thumbnail, duration] = await Promise.all([
+                generateVideoThumbnail(file),
+                getVideoDuration(file),
+            ]);
 
-        if (fileHandle) {
-          const videoFileHandle: VideoFileHandle = {
-            id,
-            handle: fileHandle,
-          };
-          tx.objectStore(FILE_HANDLE_STORE).put(videoFileHandle);
+            const videoData: StoredVideoFile = {
+              id,
+              name: file.name,
+              thumbnail,
+              duration,
+              lastPlayed: 0,
+              createdAt: new Date(),
+              favorited: false,
+              size: file.size,
+              type: file.type,
+              video: file, // Store the file blob itself
+              currentTime: 0,
+              progress: 0,
+              isVaulted: false,
+            };
+            
+            const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
+            tx.objectStore(VIDEO_STORE).put(videoData);
+
+            if (fileHandle) {
+              const videoFileHandle: VideoFileHandle = {
+                id,
+                handle: fileHandle,
+              };
+              tx.objectStore(FILE_HANDLE_STORE).put(videoFileHandle);
+            }
+
+            tx.oncomplete = () => {
+                const { video, ...rest } = videoData;
+                resolve(rest);
+            };
+            tx.onerror = () => reject(tx.error);
         }
+        existingVideoRequest.onerror = () => reject(existingVideoRequest.error);
 
-        tx.oncomplete = () => {
-            const { video, ...rest } = videoData;
-            resolve(rest);
-        };
-        tx.onerror = () => reject(tx.error);
       } catch (error) {
         reject(error);
       }
@@ -429,9 +442,10 @@ class IndexedDBManager {
   async addVideoToPlaylist(playlistId: string, videoId: string): Promise<void> {
     const playlist = await this.getPlaylist(playlistId);
     if (playlist) {
-      // Prepend the new videoId
-      playlist.videoIds.unshift(videoId);
-      await this.updatePlaylist(playlist);
+       if (!playlist.videoIds.includes(videoId)) {
+            playlist.videoIds.unshift(videoId);
+            await this.updatePlaylist(playlist);
+       }
     }
   }
 
