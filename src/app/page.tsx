@@ -161,7 +161,7 @@ export default function HomePage() {
     return (
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-b w-full">
              <div className="flex items-center gap-2 self-start md:self-center">
-                <SidebarTrigger className="h-10 w-10 md:hidden" />
+                <SidebarTrigger className="h-10 w-10 hidden" />
                 <h1 className="text-2xl font-bold">Video Library</h1>
             </div>
             <div className="flex items-center gap-2 w-full md:w-auto">

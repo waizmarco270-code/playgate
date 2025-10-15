@@ -148,7 +148,7 @@ export default function PlaylistDetailPage() {
         <div className="flex flex-col h-full">
             <header className="flex items-center justify-between gap-4 p-4 border-b">
                 <div className="flex items-center gap-2">
-                    <SidebarTrigger className="md:hidden" />
+                    <SidebarTrigger className="hidden" />
                     <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')} className="hidden md:inline-flex">
                         <ArrowLeft />
                     </Button>

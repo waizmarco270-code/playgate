@@ -8,6 +8,7 @@ import AppSidebar from '@/components/layout/app-sidebar';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
 import { LoadingScreenProvider } from '@/components/providers/loading-screen-provider';
+import BottomNav from '@/components/layout/bottom-nav';
 
 export const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
@@ -38,8 +39,11 @@ export default function RootLayout({
             <SidebarProvider>
               <div className="flex min-h-screen">
                 <AppSidebar />
-                <SidebarInset>{children}</SidebarInset>
+                <SidebarInset>
+                  <div className="md:pb-0 pb-20 h-full">{children}</div>
+                </SidebarInset>
               </div>
+              <BottomNav />
             </SidebarProvider>
             <Toaster />
           </LoadingScreenProvider>
