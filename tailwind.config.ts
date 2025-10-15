@@ -92,10 +92,10 @@ export default {
           },
         },
         'fall': {
-          '0%': { transform: 'translateY(-100%)', opacity: '0' },
+          '0%': { transform: 'translateY(-20vh)', opacity: '0' },
           '10%': { opacity: '1' },
           '90%': { opacity: '1' },
-          '100%': { transform: 'translateY(100vh)', opacity: '0' },
+          '100%': { transform: 'translateY(120vh)', opacity: '0' },
         },
       },
       animation: {

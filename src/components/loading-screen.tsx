@@ -66,12 +66,12 @@ const IconRain = () => {
 
     useEffect(() => {
         const generateIcons = () => {
-            const newIcons = Array.from({ length: 50 }).map((_, i) => {
+            const newIcons = Array.from({ length: 30 }).map((_, i) => {
                 const Icon = iconList[Math.floor(Math.random() * iconList.length)];
                 const style = {
                     left: `${Math.random() * 100}vw`,
-                    animationDuration: `${Math.random() * 5 + 5}s`, // 5s to 10s
-                    animationDelay: `${Math.random() * 5}s`,
+                    animationDuration: `${Math.random() * 4 + 4}s`, // 4s to 8s
+                    animationDelay: `${Math.random() * 4}s`,
                     opacity: Math.random() * 0.15 + 0.05, // 0.05 to 0.2
                 };
                 const size = Math.random() * 24 + 16; // 16px to 40px
@@ -116,7 +116,7 @@ export const LoadingScreen = () => {
                 const diff = Math.random() * 10;
                 return Math.min(prev + diff, 100);
             });
-        }, 200);
+        }, 150); // faster progress bar to match 4s duration
 
         return () => clearInterval(interval);
     }, []);
