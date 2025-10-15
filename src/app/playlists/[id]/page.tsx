@@ -5,13 +5,21 @@ import { notFound, useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Film, GripVertical, Play, Plus, CheckSquare, X, Trash2 } from "lucide-react";
+import { ArrowLeft, Film, GripVertical, Play, Plus, CheckSquare, X, Trash2, MoreVertical } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Reorder, AnimatePresence, motion } from 'framer-motion';
 import { VideoCard } from '@/components/video-card';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 export default function PlaylistDetailPage() {
     const params = useParams<{ id: string }>();
@@ -21,6 +29,7 @@ export default function PlaylistDetailPage() {
     const { toast } = useToast();
     const router = useRouter();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const isMobile = useIsMobile();
 
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
@@ -251,29 +260,52 @@ export default function PlaylistDetailPage() {
                             transition={{ duration: 0.3, ease: 'easeInOut' }}
                             className="absolute inset-0 p-4 flex items-center justify-between gap-4"
                         >
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
                                 <SidebarTrigger className="md:hidden" />
                                 <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')} className="hidden md:inline-flex">
                                     <ArrowLeft />
                                 </Button>
-                                <div className="max-w-md">
+                                <div className="flex-1 min-w-0">
                                     <h1 className="text-2xl font-bold truncate">{playlist.name}</h1>
-                                    <p className="text-muted-foreground truncate">{playlist.description || 'Drag and drop videos to reorder'}</p>
+                                    <p className="text-muted-foreground truncate text-sm">{playlist.description || 'Drag and drop videos to reorder'}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" onClick={handleImportClick}>
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Import
-                                </Button>
-                                 <Button variant="outline" onClick={toggleSelectionMode}>
-                                    <CheckSquare className="mr-2 h-4 w-4" />
-                                    Select
-                                </Button>
-                                <Button onClick={handlePlayAll} disabled={videos.length === 0}>
-                                    <Play className="mr-2 h-4 w-4" />
-                                    Play All
-                                </Button>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                {isMobile ? (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" size="icon">
+                                                <MoreVertical />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onSelect={handleImportClick}>
+                                                <Plus className="mr-2 h-4 w-4" /> Import
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={toggleSelectionMode}>
+                                                <CheckSquare className="mr-2 h-4 w-4" /> Select
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={handlePlayAll} disabled={videos.length === 0}>
+                                                <Play className="mr-2 h-4 w-4" /> Play All
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ) : (
+                                    <>
+                                        <Button variant="outline" onClick={handleImportClick}>
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Import
+                                        </Button>
+                                        <Button variant="outline" onClick={toggleSelectionMode}>
+                                            <CheckSquare className="mr-2 h-4 w-4" />
+                                            Select
+                                        </Button>
+                                        <Button onClick={handlePlayAll} disabled={videos.length === 0}>
+                                            <Play className="mr-2 h-4 w-4" />
+                                            Play All
+                                        </Button>
+                                    </>
+                                )}
                                 <input
                                     type="file"
                                     ref={fileInputRef}
@@ -305,7 +337,7 @@ export default function PlaylistDetailPage() {
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="destructive"
-                                onClick={() => setIsBulkDeleteDialogOpen(true)}
+                                onClick={()={() => setIsBulkDeleteDialogOpen(true)}}
                                 disabled={selectedVideoIds.size === 0}
                             >
                                 <Trash2 className="mr-2 h-4 w-4" /> Remove from Playlist
