@@ -1,11 +1,11 @@
 {
-  "name": "WaizPlay",
-  "short_name": "WaizPlay",
-  "description": "Your Offline Video Universe.",
+  "name": "PlayGate",
+  "short_name": "PlayGate",
+  "description": "Your Offline Video Universe",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",
-  "theme_color": "#00C6FF",
+  "theme_color": "#121212",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
