@@ -53,7 +53,7 @@ The logo must work beautifully in both a single color (monochrome white or black
 #### **4. Font & Typography**
 
 The text part of the logo should complement the symbol, not compete with it.
-
+f 
 *   **Font:** **Inter**. This font is already used in the app, providing excellent consistency. It's a modern, highly-readable sans-serif that feels neutral yet professional.
 *   **Weight:** Use a semi-bold (`SemiBold`) or medium (`Medium`) weight. It should feel solid but not overly heavy. `Bold` might be too aggressive.
 *   **Case:** **"PlayGate"** in title case or **"PLAYGATE"** in all-caps. All-caps can feel more techy and authoritative, while title case is slightly more friendly. Given the futuristic vibe, all-caps is likely the stronger choice.
