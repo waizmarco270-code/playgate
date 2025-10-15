@@ -9,14 +9,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useVault } from '../providers/vault-provider';
 import { Button } from '../ui/button';
-import { Lock } from 'lucide-react';
-import { ShieldCheck, ShieldOff } from 'lucide-react';
+import { Lock, ShieldCheck, ShieldOff, CheckSquare, X, Trash2 } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { DeleteConfirmationDialog } from '../delete-confirmation-dialog';
 
 export function VaultContent() {
     const [videos, setVideos] = useState<VideoFile[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const { lock } = useVault();
+
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
+    const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+
 
     const loadVideos = useCallback(async () => {
         setLoading(true);
@@ -43,34 +49,116 @@ export function VaultContent() {
     const onVideoDeleted = (videoId: string) => {
         setVideos(prev => prev.filter(v => v.id !== videoId));
         toast({
-        title: "Video Deleted",
-        description: "The video has been removed from your library.",
+            title: "Video Deleted",
+            description: "The video has been removed from your library.",
         });
     }
 
     const onVideoUpdated = (updatedVideo: VideoFile) => {
         if (!updatedVideo.isVaulted) {
-            // If removed from vault, remove from this view
             setVideos(prev => prev.filter(v => v.id !== updatedVideo.id));
+             toast({
+                title: "Moved to Library",
+                description: "The video has been moved out of the vault.",
+            });
         } else {
-            // Otherwise, update it in the list (e.g. rename)
             setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
         }
     }
+    
+    const toggleSelectionMode = () => {
+        setIsSelectionMode(prev => !prev);
+        setSelectedVideoIds(new Set());
+    };
+
+    const handleVideoSelect = (videoId: string) => {
+        setSelectedVideoIds(prev => {
+            const newSet = new Set(prev);
+            if(newSet.has(videoId)) {
+                newSet.delete(videoId);
+            } else {
+                newSet.add(videoId);
+            }
+            return newSet;
+        });
+    }
+
+    const handleBulkRemoveFromVault = async () => {
+        try {
+            for(const videoId of Array.from(selectedVideoIds)) {
+                await db.toggleVaultStatus(videoId, false);
+            }
+            setVideos(prev => prev.filter(v => !selectedVideoIds.has(v.id)));
+             toast({
+                title: `${selectedVideoIds.size} videos moved to library`,
+            });
+        } catch (e) {
+            toast({ title: 'Error moving videos', variant: 'destructive' });
+        } finally {
+            toggleSelectionMode();
+        }
+    }
+
 
     return (
+        <>
         <div className="flex flex-col h-full">
-            <header className="flex items-center justify-between p-4 border-b">
-                <div className="flex items-center gap-2">
-                    <SidebarTrigger className="md:hidden" />
-                    <h1 className="text-2xl font-bold flex items-center gap-2">
-                        <ShieldCheck className="text-primary" />
-                        Privacy Vault
-                    </h1>
-                </div>
-                 <Button variant="outline" onClick={lock}>
-                    <Lock className="mr-2 h-4 w-4" /> Lock Vault
-                </Button>
+            <header className="relative flex items-center justify-between p-4 border-b overflow-hidden h-[73px]">
+                 <AnimatePresence>
+                    {!isSelectionMode && (
+                         <motion.div
+                            key="vault-header"
+                            initial={{ opacity: 0, x: -50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -50 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="absolute inset-0 p-4 flex items-center justify-between"
+                        >
+                            <div className="flex items-center gap-2">
+                                <SidebarTrigger className="md:hidden" />
+                                <h1 className="text-2xl font-bold flex items-center gap-2">
+                                    <ShieldCheck className="text-primary" />
+                                    Privacy Vault
+                                </h1>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                 <Button variant="outline" onClick={toggleSelectionMode} disabled={videos.length === 0}>
+                                    <CheckSquare className="mr-2 h-4 w-4" /> Select
+                                </Button>
+                                <Button variant="outline" onClick={lock}>
+                                    <Lock className="mr-2 h-4 w-4" /> Lock Vault
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+                 </AnimatePresence>
+                 <AnimatePresence>
+                    {isSelectionMode && (
+                        <motion.div
+                            key="selection-header"
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 50 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="absolute inset-0 p-4 flex items-center justify-between bg-secondary"
+                        >
+                            <div className="flex items-center gap-4">
+                                <Button variant="ghost" size="icon" onClick={toggleSelectionMode}>
+                                    <X />
+                                </Button>
+                                <h2 className="text-lg font-semibold">{selectedVideoIds.size} video(s) selected</h2>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button 
+                                    onClick={() => setIsBulkDeleteDialogOpen(true)}
+                                    disabled={selectedVideoIds.size === 0}
+                                >
+                                    <ShieldOff className="mr-2 h-4 w-4" /> Remove from Vault
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </header>
              <main className="flex-1 p-6 overflow-y-auto">
                 {loading ? (
@@ -100,11 +188,23 @@ export function VaultContent() {
                         onVideoDeleted={onVideoDeleted}
                         onVideoUpdated={onVideoUpdated}
                         context="vault"
+                        isSelectionMode={isSelectionMode}
+                        selectedVideoIds={selectedVideoIds}
+                        onVideoSelect={handleVideoSelect}
                     />
                 </VideoGrid>
                 )}
             </main>
         </div>
+         <DeleteConfirmationDialog 
+            isOpen={isBulkDeleteDialogOpen}
+            onOpenChange={setIsBulkDeleteDialogOpen}
+            onConfirm={handleBulkRemoveFromVault}
+            itemName={`${selectedVideoIds.size} videos`}
+            itemType="videos"
+            actionDescription="This will move the selected videos out of the vault and back into your main library. They will no longer be password-protected."
+        />
+        </>
     );
 
 }

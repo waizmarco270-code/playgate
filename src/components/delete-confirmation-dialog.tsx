@@ -18,6 +18,8 @@ interface DeleteConfirmationDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   itemName: string;
+  itemType?: string;
+  actionDescription?: string;
 }
 
 export function DeleteConfirmationDialog({
@@ -25,15 +27,17 @@ export function DeleteConfirmationDialog({
   onOpenChange,
   onConfirm,
   itemName,
+  itemType = "video",
+  actionDescription
 }: DeleteConfirmationDialogProps) {
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure you want to delete?</AlertDialogTitle>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the video
-            <span className="font-semibold break-all"> "{itemName}"</span>.
+            {actionDescription || `This will permanently delete the ${itemType}`}
+            <span className="font-semibold break-all"> "{itemName}"</span>. This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { VideoGrid } from '@/components/video-grid';
 import { db } from '@/lib/db';
 import type { VideoFile } from '@/lib/types';
-import { Film, Plus, Search, CheckSquare, X } from 'lucide-react';
+import { Film, Plus, Search, CheckSquare, X, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { AnimatePresence, motion } from 'framer-motion';
+import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
 
 // Moved HeaderContent outside of HomePage to prevent re-creation on every render
 const HeaderContent = ({
@@ -30,6 +32,7 @@ const HeaderContent = ({
   searchTerm,
   setSearchTerm,
   handleImportClick,
+  handleBulkDeleteClick,
 }: {
   isSelectionMode: boolean;
   selectedVideoIds: Set<string>;
@@ -38,12 +41,77 @@ const HeaderContent = ({
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   handleImportClick: () => void;
+  handleBulkDeleteClick: () => void;
 }) => {
   const isMobile = useIsMobile();
 
-  if(isSelectionMode) {
-      return (
-           <div className="flex items-center justify-between p-4 border-b bg-secondary w-full">
+  return (
+    <div className="relative flex items-center justify-between p-4 border-b w-full overflow-hidden h-[73px]">
+       <AnimatePresence>
+        {!isSelectionMode && (
+           <motion.div
+            key="search-header"
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="absolute inset-0 p-4 flex flex-col md:flex-row items-center justify-between gap-4"
+          >
+            <div className="flex items-center gap-2 self-start md:self-center">
+                <SidebarTrigger className="h-10 w-10 md:hidden" />
+                <h1 className="text-2xl font-bold">Video Library</h1>
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                    type="search"
+                    placeholder="Search videos..."
+                    className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                {isMobile ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <MoreVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={toggleSelectionMode}>
+                          <CheckSquare className="mr-2 h-4 w-4" /> Select
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={handleImportClick}>
+                           <Plus className="mr-2 h-4 w-4" /> Import Video
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={toggleSelectionMode}>
+                        <CheckSquare className="mr-2 h-4 w-4" /> Select
+                    </Button>
+                    <Button onClick={handleImportClick}>
+                        <Plus className="mr-2 h-4 w-4" /> Import Video
+                    </Button>
+                  </>
+                )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isSelectionMode && (
+          <motion.div
+            key="selection-header"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="absolute inset-0 p-4 flex items-center justify-between bg-secondary"
+          >
               <div className="flex items-center gap-4">
                   <Button variant="ghost" size="icon" onClick={toggleSelectionMode}>
                       <X />
@@ -51,6 +119,13 @@ const HeaderContent = ({
                   <h2 className="text-lg font-semibold">{selectedVideoIds.size} video(s) selected</h2>
               </div>
               <div className="flex items-center gap-2">
+                  <Button
+                      variant="destructive"
+                      onClick={handleBulkDeleteClick}
+                      disabled={selectedVideoIds.size === 0}
+                  >
+                     <Trash2 className="mr-2 h-4 w-4" /> Delete
+                  </Button>
                   <Button 
                       onClick={() => setIsAddToPlaylistOpen(true)}
                       disabled={selectedVideoIds.size === 0}
@@ -58,55 +133,10 @@ const HeaderContent = ({
                       <Plus className="mr-2 h-4 w-4" /> Add to Playlist
                   </Button>
               </div>
-          </div>
-      )
-  }
-
-  return (
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-b w-full">
-           <div className="flex items-center gap-2 self-start md:self-center">
-              <SidebarTrigger className="h-10 w-10 md:hidden" />
-              <h1 className="text-2xl font-bold">Video Library</h1>
-          </div>
-          <div className="flex items-center gap-2 w-full md:w-auto">
-              <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                  type="search"
-                  placeholder="Search videos..."
-                  className="pl-9"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-              </div>
-              {isMobile ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <MoreVertical />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={toggleSelectionMode}>
-                        <CheckSquare className="mr-2 h-4 w-4" /> Select
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={handleImportClick}>
-                         <Plus className="mr-2 h-4 w-4" /> Import Video
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={toggleSelectionMode}>
-                      <CheckSquare className="mr-2 h-4 w-4" /> Select
-                  </Button>
-                  <Button onClick={handleImportClick}>
-                      <Plus className="mr-2 h-4 w-4" /> Import Video
-                  </Button>
-                </>
-              )}
-          </div>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -120,6 +150,7 @@ export default function HomePage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
 
   const loadVideos = useCallback(async () => {
@@ -202,7 +233,7 @@ export default function HomePage() {
   }
 
   const toggleSelectionMode = () => {
-    setIsSelectionMode(!isSelectionMode);
+    setIsSelectionMode(prev => !prev);
     setSelectedVideoIds(new Set());
   };
 
@@ -226,6 +257,22 @@ export default function HomePage() {
     }
   }
 
+  const handleBulkDelete = async () => {
+    try {
+      for(const videoId of Array.from(selectedVideoIds)) {
+        await db.deleteVideo(videoId);
+      }
+      setVideos(prev => prev.filter(v => !selectedVideoIds.has(v.id)));
+      toast({
+        title: `${selectedVideoIds.size} videos deleted`,
+      });
+    } catch(e) {
+      toast({ title: 'Error deleting videos', variant: 'destructive' });
+    } finally {
+      toggleSelectionMode();
+    }
+  }
+
   const filteredVideos = videos.filter((video) =>
     video.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -243,6 +290,7 @@ export default function HomePage() {
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             handleImportClick={handleImportClick}
+            handleBulkDeleteClick={() => setIsBulkDeleteDialogOpen(true)}
           />
            <input
               type="file"
@@ -307,6 +355,12 @@ export default function HomePage() {
         videoIds={Array.from(selectedVideoIds)}
       />
     )}
+     <DeleteConfirmationDialog 
+        isOpen={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        onConfirm={handleBulkDelete}
+        itemName={`${selectedVideoIds.size} videos`}
+    />
     </>
   );
 }

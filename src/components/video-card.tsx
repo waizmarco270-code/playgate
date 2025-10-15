@@ -22,6 +22,7 @@ import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 import { AddToPlaylistDialog } from './add-to-playlist-dialog';
 import { RenameVideoDialog } from './rename-video-dialog';
 import { useVault } from './providers/vault-provider';
+import { motion } from 'framer-motion';
 
 interface VideoCardProps {
   video: VideoFile;
@@ -117,7 +118,7 @@ export function VideoCard({
           <Card className={cn(
             "overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/20 hover:border-primary/50",
             isSelectionMode && 'cursor-pointer',
-            isSelected && 'border-primary shadow-lg shadow-primary/20'
+            isSelected && 'border-primary shadow-lg shadow-primary/20 ring-2 ring-primary'
           )}>
             <CardContent className="p-0">
               <div className="flex items-center">
@@ -147,9 +148,15 @@ export function VideoCard({
                     </div>
                   </Wrapper>
                   {isSelectionMode && (
-                     <div className="absolute top-2 left-2 z-10 p-1 rounded-full bg-background/70">
+                     <motion.div
+                      layout
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      className="absolute top-2 left-2 z-10 p-1 rounded-full bg-background/70"
+                    >
                         <CheckCircle2 className={cn("h-6 w-6 transition-colors", isSelected ? 'text-primary' : 'text-muted-foreground/50')} />
-                    </div>
+                    </motion.div>
                   )}
                 </div>
                 <div className="p-4 flex-grow overflow-hidden">
@@ -183,10 +190,12 @@ export function VideoCard({
                         <span>{video.isVaulted ? 'Remove from Vault' : 'Move to Vault'}</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
-                        <ListPlus className="mr-2 h-4 w-4" />
-                        <span>Add to Playlist</span>
-                      </DropdownMenuItem>
+                      {context !== 'vault' && (
+                        <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
+                            <ListPlus className="mr-2 h-4 w-4" />
+                            <span>Add to Playlist</span>
+                        </DropdownMenuItem>
+                      )}
                       {context === 'playlist' && onVideoRemovedFromPlaylist ? (
                         <DropdownMenuItem 
                           onClick={handleRemoveFromPlaylist}
@@ -257,9 +266,15 @@ export function VideoCard({
                 </div>
               )}
               {isSelectionMode && (
-                 <div className="absolute top-2 left-2 z-10 p-1 rounded-full bg-background/70">
+                 <motion.div
+                    layout
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    className="absolute top-2 left-2 z-10 p-1 rounded-full bg-background/70"
+                  >
                     <CheckCircle2 className={cn("h-6 w-6 transition-colors", isSelected ? 'text-primary' : 'text-muted-foreground/50')} />
-                </div>
+                </motion.div>
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
               <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md">
@@ -277,7 +292,7 @@ export function VideoCard({
                  {!isSelectionMode && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mr-2 -mt-1" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mr-2 -mt-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -295,10 +310,12 @@ export function VideoCard({
                         <span>{video.isVaulted ? 'Remove from Vault' : 'Move to Vault'}</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
-                        <ListPlus className="mr-2 h-4 w-4" />
-                        <span>Add to Playlist</span>
-                      </DropdownMenuItem>
+                      {context !== 'vault' && (
+                        <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
+                            <ListPlus className="mr-2 h-4 w-4" />
+                            <span>Add to Playlist</span>
+                        </DropdownMenuItem>
+                      )}
                       {context === 'playlist' && onVideoRemovedFromPlaylist ? (
                         <DropdownMenuItem 
                           onClick={handleRemoveFromPlaylist}
