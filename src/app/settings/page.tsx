@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
-import { HardDriveDownload, HardDriveUpload, Trash2 } from 'lucide-react';
+import { HardDriveDownload, HardDriveUpload, Trash2, ShieldCheck, Database, KeyRound } from 'lucide-react';
 import { useRef } from 'react';
 
 export default function SettingsPage() {
@@ -125,6 +125,36 @@ export default function SettingsPage() {
                                         <SelectItem value="system">System</SelectItem>
                                     </SelectContent>
                                 </Select>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Privacy & Security</CardTitle>
+                            <CardDescription>How your data is stored and secured.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                             <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
+                                <Database className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                                <div>
+                                    <h3 className="font-semibold">100% Local Data Storage</h3>
+                                    <p className="text-sm text-muted-foreground">All your data, including video files, playlists, and metadata, is stored exclusively on your device using your browser's IndexedDB. Nothing is ever uploaded to a server, ensuring your privacy is completely protected.</p>
+                                </div>
+                            </div>
+                             <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
+                                <ShieldCheck className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                                <div>
+                                    <h3 className="font-semibold">Secure Vault Encryption</h3>
+                                    <p className="text-sm text-muted-foreground">Videos moved to the Vault are encrypted. Your Vault password is used to generate a key that encrypts this data. The password is only stored as a secure hash on your device.</p>
+                                </div>
+                            </div>
+                             <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
+                                <KeyRound className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                                <div>
+                                    <h3 className="font-semibold">Password Recovery</h3>
+                                    <p className="text-sm text-muted-foreground">Because your password is not stored on any server, it cannot be traditionally recovered. If you forget it, you must use the "Reset Password" feature, which requires contacting the developer with a unique support code to get an unlock key. **Store your password safely!**</p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

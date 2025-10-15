@@ -1,4 +1,5 @@
 
+'use client';
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
@@ -10,14 +11,16 @@ import Script from 'next/script';
 import BottomNav from '@/components/layout/bottom-nav';
 import { VaultProvider } from '@/components/providers/vault-provider';
 import { LoadingScreenProvider } from '@/components/providers/loading-screen-provider';
+import { PrivacyPopup } from '@/components/privacy-popup';
+import { useState, useEffect } from 'react';
 
-export const metadata: Metadata = {
+const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
   description: 'A professional, modern PWA video player that allows users to import, organize, and play locally stored videos completely offline.',
   manifest: '/manifest.json',
 };
 
-export const viewport: Viewport = {
+const viewport: Viewport = {
   themeColor: '#121212',
 };
 
@@ -26,6 +29,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [showPrivacyPopup, setShowPrivacyPopup] = useState(false);
+
+  useEffect(() => {
+    const privacyPopupSeen = localStorage.getItem('privacyPopupSeen');
+    if (!privacyPopupSeen) {
+      // Show the popup after the initial loading screen is done
+      setTimeout(() => {
+        setShowPrivacyPopup(true);
+      }, 4500); // A little after loading screen finishes
+    }
+  }, []);
+
+  const handlePrivacyPopupClose = () => {
+    localStorage.setItem('privacyPopupSeen', 'true');
+    setShowPrivacyPopup(false);
+  };
+
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -56,6 +77,7 @@ export default function RootLayout({
             </VaultProvider>
           </LoadingScreenProvider>
           <Toaster />
+          <PrivacyPopup isOpen={showPrivacyPopup} onClose={handlePrivacyPopupClose} />
         </ThemeProvider>
         <Script id="service-worker-registration">
           {`
