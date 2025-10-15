@@ -17,6 +17,10 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import {
   Popover,
@@ -25,6 +29,7 @@ import {
 } from "@/components/ui/popover"
 import { useInterval } from 'usehooks-ts';
 import { useIsMobile } from '@/hooks/use-mobile';
+import React from 'react';
 
 export default function PlayerPage() {
   const params = useParams<{ id: string }>();
@@ -476,44 +481,48 @@ export default function PlayerPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+             <DropdownMenuItem onSelect={handleSetThumbnail}>
+                <Camera className="mr-2 h-4 w-4" />
+                <span>Set Thumbnail</span>
+              </DropdownMenuItem>
              <DropdownMenuItem onSelect={handleTogglePiP} disabled={!document.pictureInPictureEnabled}>
                 <PictureInPicture className="mr-2 h-4 w-4" />
                 <span>PiP</span>
              </DropdownMenuItem>
              {audioTracks.length > 0 && <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                       <div className="flex items-center w-full">
-                           <AudioLines className="mr-2 h-4 w-4" />
-                            <span>Audio</span>
-                        </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuRadioGroup value={selectedAudioTrackId} onValueChange={handleAudioTrackChange}>
-                          {audioTracks.map(track => (
-                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
-                          ))}
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                       <AudioLines className="mr-2 h-4 w-4" />
+                        <span>Audio</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuRadioGroup value={selectedAudioTrackId} onValueChange={handleAudioTrackChange}>
+                            {audioTracks.map(track => (
+                                <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
+                            ))}
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
              </DropdownMenuItem>}
              {textTracks.length > 0 && <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                       <div className="flex items-center w-full">
-                           <Captions className="mr-2 h-4 w-4" />
-                            <span>Subtitles</span>
-                        </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuRadioGroup value={selectedTextTrackId} onValueChange={handleTextTrackChange}>
-                           <DropdownMenuRadioItem value="off">Off</DropdownMenuRadioItem>
-                           {textTracks.map(track => (
-                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
-                          ))}
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                 <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                       <Captions className="mr-2 h-4 w-4" />
+                       <span>Subtitles</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <DropdownMenuRadioGroup value={selectedTextTrackId} onValuechange={handleTextTrackChange}>
+                                <DropdownMenuRadioItem value="off">Off</DropdownMenuRadioItem>
+                                {textTracks.map(track => (
+                                    <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
+                                ))}
+                            </DropdownMenuRadioGroup>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
              </DropdownMenuItem>}
           </DropdownMenuContent>
         </DropdownMenu>
