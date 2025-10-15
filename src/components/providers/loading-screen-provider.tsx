@@ -15,54 +15,54 @@ const LoadingScreenContext = createContext<{
 export const useLoadingScreen = () => useContext(LoadingScreenContext);
 
 export function LoadingScreenProvider({ children }: { children: ReactNode }) {
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState<boolean | undefined>(undefined);
+  const [isAnimationActive, setIsAnimationActive] = useState(true);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // This check must run only once on the client
-    const firstVisit = !sessionStorage.getItem('playgate-session-started');
-    setIsFirstVisit(firstVisit);
+    // This effect runs only once on mount to determine if we should show the animation.
+    const firstVisitSession = !sessionStorage.getItem('playgate-session-started');
+    setIsFirstVisit(firstVisitSession);
 
-    if (!firstVisit) {
-      setIsAnimationComplete(true);
-      return;
-    }
+    if (firstVisitSession) {
+      sessionStorage.setItem('playgate-session-started', 'true');
+      
+      // Start progress bar interval
+      const startTime = Date.now();
+      const interval = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        const currentProgress = Math.min(100, (elapsedTime / LOADING_DURATION) * 100);
+        setProgress(currentProgress);
+        if (currentProgress >= 100) {
+          clearInterval(interval);
+        }
+      }, 50);
 
-    sessionStorage.setItem('playgate-session-started', 'true');
-    
-    const startTime = Date.now();
-    
-    const interval = setInterval(() => {
-      const elapsedTime = Date.now() - startTime;
-      const currentProgress = Math.min(100, (elapsedTime / LOADING_DURATION) * 100);
-      setProgress(currentProgress);
+      // Set a timeout to end the animation
+      const animationTimeout = setTimeout(() => {
+        setIsAnimationActive(false);
+      }, LOADING_DURATION);
 
-      if (currentProgress >= 100) {
-        clearInterval(interval);
-      }
-    }, 50);
-
-    // Set a timeout to mark the animation as complete after the full duration
-    const animationTimeout = setTimeout(() => {
-        setIsAnimationComplete(true);
-    }, LOADING_DURATION + 500); // Add a small buffer
-
-    return () => {
+      return () => {
         clearInterval(interval);
         clearTimeout(animationTimeout);
-    };
-    
+      };
+    } else {
+      // If it's not the first visit, end the animation immediately.
+      setIsAnimationActive(false);
+    }
   }, []);
-  
-  const showAnimation = isFirstVisit && !isAnimationComplete;
+
+  const shouldShowAnimation = isFirstVisit === true && isAnimationActive;
 
   return (
-    <LoadingScreenContext.Provider value={{ isLoading: showAnimation }}>
-        <AnimatePresence>
-            {showAnimation && <LoadingScreen progress={progress} />}
-        </AnimatePresence>
-        {isAnimationComplete && children}
+    <LoadingScreenContext.Provider value={{ isLoading: shouldShowAnimation }}>
+      <AnimatePresence>
+        {shouldShowAnimation && <LoadingScreen progress={progress} />}
+      </AnimatePresence>
+      
+      {/* Only render children if the session has started and animation is complete */}
+      {!shouldShowAnimation && isFirstVisit !== undefined && children}
     </LoadingScreenContext.Provider>
   );
 }
