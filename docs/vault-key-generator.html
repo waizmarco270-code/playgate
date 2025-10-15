@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayGate Vault Key Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-md mx-auto p-8 bg-gray-800 rounded-lg shadow-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-cyan-400">PlayGate</h1>
+            <h2 class="text-xl font-semibold text-gray-300 mt-1">Vault Key Generator</h2>
+            <p class="text-sm text-gray-500 mt-2">For developer use only</p>
+        </div>
+        
+        <div class="space-y-4">
+            <div>
+                <label for="support-code" class="block text-sm font-medium text-gray-400 mb-1">Support Code</label>
+                <input type="text" id="support-code" placeholder="Paste user's support code here" class="w-full bg-gray-700 border-gray-600 text-white rounded-md p-3 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 font-mono tracking-widest">
+            </div>
+            <button id="generate-btn" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-bold py-3 px-4 rounded-md transition duration-300">
+                Generate Unlock Key
+            </button>
+        </div>
+        
+        <div id="result-container" class="mt-8 p-4 bg-gray-900 rounded-md border border-gray-700 text-center hidden">
+            <label class="block text-sm font-medium text-gray-400 mb-2">Generated Unlock Key</label>
+            <p id="unlock-key" class="text-2xl font-mono tracking-widest text-green-400"></p>
+            <p class="text-xs text-gray-500 mt-2">Send this key back to the user.</p>
+        </div>
+    </div>
+
+    <script>
+        const supportCodeInput = document.getElementById('support-code');
+        const generateBtn = document.getElementById('generate-btn');
+        const resultContainer = document.getElementById('result-container');
+        const unlockKeyOutput = document.getElementById('unlock-key');
+
+        // This secret MUST match the one in `src/lib/crypto.ts`
+        const MASTER_SECRET = "SECRET_MASTER_KEY_WAIZDEV_786";
+
+        async function generateUnlockKey(supportCode) {
+            if (!supportCode) return null;
+            try {
+                const encoder = new TextEncoder();
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    'raw',
+                    encoder.encode(MASTER_SECRET),
+                    { name: 'PBKDF2' },
+                    false,
+                    ['deriveKey']
+                );
+                const derivedKey = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: encoder.encode(supportCode),
+                        iterations: 1000,
+                        hash: 'SHA-256',
+                    },
+                    keyMaterial,
+                    { name: 'HMAC', hash: 'SHA-256', length: 256 },
+                    true,
+                    ['sign']
+                );
+                const signature = await window.crypto.subtle.sign(
+                    'HMAC',
+                    derivedKey,
+                    encoder.encode(supportCode + "_unlock")
+                );
+
+                const hexSignature = Array.from(new Uint8Array(signature)).map(b => b.toString(16).padStart(2, '0')).join('');
+                return hexSignature.substring(0, 12).toUpperCase();
+
+            } catch (e) {
+                console.error("Key generation failed:", e);
+                return null;
+            }
+        }
+
+        generateBtn.addEventListener('click', async () => {
+            const supportCode = supportCodeInput.value.trim();
+            if (!supportCode) {
+                alert("Please enter a support code.");
+                return;
+            }
+            const key = await generateUnlockKey(supportCode);
+            if (key) {
+                unlockKeyOutput.textContent = key;
+                resultContainer.classList.remove('hidden');
+            } else {
+                alert("Failed to generate key. Check console for errors.");
+            }
+        });
+    </script>
+</body>
+</html>
