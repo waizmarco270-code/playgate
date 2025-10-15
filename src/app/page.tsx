@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { VideoGrid } from '@/components/video-grid';
 import { db } from '@/lib/db';
 import type { VideoFile } from '@/lib/types';
-import { Film, Plus, Search } from 'lucide-react';
+import { Film, Plus, Search, CheckSquare, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AddToPlaylistDialog } from '@/components/add-to-playlist-dialog';
 
 export default function HomePage() {
   const [videos, setVideos] = useState<VideoFile[]>([]);
@@ -17,6 +18,11 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
+  const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
+
 
   const loadVideos = useCallback(async () => {
     setLoading(true);
@@ -56,8 +62,6 @@ export default function HomePage() {
       });
 
       for (const file of Array.from(files)) {
-        // The concept of a FileSystemFileHandle doesn't exist with <input>, so we pass null.
-        // The db logic will need to be robust enough to handle this.
         await db.addVideo(file, null);
       }
 
@@ -74,7 +78,6 @@ export default function HomePage() {
         variant: 'destructive',
       });
     } finally {
-        // Reset the input value to allow selecting the same file again
         if(fileInputRef.current) {
             fileInputRef.current.value = '';
         }
@@ -89,37 +92,96 @@ export default function HomePage() {
     });
   }
 
+  const toggleSelectionMode = () => {
+    setIsSelectionMode(!isSelectionMode);
+    setSelectedVideoIds(new Set());
+  };
+
+  const handleVideoSelect = (videoId: string) => {
+    setSelectedVideoIds(prev => {
+        const newSet = new Set(prev);
+        if(newSet.has(videoId)) {
+            newSet.delete(videoId);
+        } else {
+            newSet.add(videoId);
+        }
+        return newSet;
+    });
+  }
+  
+  const handlePlaylistDialogClose = (updated: boolean) => {
+    setIsAddToPlaylistOpen(false);
+    if(updated) {
+        // Potentially refresh data or just exit selection mode
+        toggleSelectionMode();
+    }
+  }
+
+
   const filteredVideos = videos.filter((video) =>
     video.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  const HeaderContent = () => {
+    if(isSelectionMode) {
+        return (
+             <div className="flex items-center justify-between p-4 border-b bg-secondary w-full">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={toggleSelectionMode}>
+                        <X />
+                    </Button>
+                    <h2 className="text-lg font-semibold">{selectedVideoIds.size} video(s) selected</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Button 
+                        onClick={() => setIsAddToPlaylistOpen(true)}
+                        disabled={selectedVideoIds.size === 0}
+                    >
+                        <Plus className="mr-2 h-4 w-4" /> Add to Playlist
+                    </Button>
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="flex items-center justify-between p-4 border-b w-full">
+            <h1 className="text-2xl font-bold">Video Library</h1>
+            <div className="flex items-center gap-2">
+                <div className="relative w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                    type="search"
+                    placeholder="Search videos..."
+                    className="pl-9"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <Button variant="outline" onClick={toggleSelectionMode}>
+                    <CheckSquare className="mr-2 h-4 w-4" /> Select
+                </Button>
+                <Button onClick={handleImportClick}>
+                    <Plus className="mr-2 h-4 w-4" /> Import Video
+                </Button>
+                 <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    multiple
+                    accept="video/*,.mp4,.webm,.ogg,.mov,.avi,.mkv"
+                    className="hidden"
+                />
+            </div>
+        </div>
+    )
+  }
 
   return (
+    <>
     <div className="flex flex-col h-full">
-      <header className="flex items-center justify-between p-4 border-b">
-        <h1 className="text-2xl font-bold">Video Library</h1>
-        <div className="flex items-center gap-2">
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search videos..."
-              className="pl-9"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <Button onClick={handleImportClick}>
-            <Plus className="mr-2 h-4 w-4" /> Import Video
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            multiple
-            accept="video/*,.mp4,.webm,.ogg,.mov,.avi,.mkv"
-            className="hidden"
-          />
-        </div>
+      <header className="flex items-center justify-between">
+          <HeaderContent />
       </header>
       <main className="flex-1 p-6 overflow-y-auto">
         {loading ? (
@@ -155,10 +217,25 @@ export default function HomePage() {
           </div>
         ) : (
           <VideoGrid>
-            <VideoGrid.Content videos={filteredVideos} onVideoDeleted={onVideoDeleted} context="library" />
+            <VideoGrid.Content 
+                videos={filteredVideos} 
+                onVideoDeleted={onVideoDeleted} 
+                context="library"
+                isSelectionMode={isSelectionMode}
+                selectedVideoIds={selectedVideoIds}
+                onVideoSelect={handleVideoSelect}
+            />
           </VideoGrid>
         )}
       </main>
     </div>
+    {isSelectionMode && (
+      <AddToPlaylistDialog
+        isOpen={isAddToPlaylistOpen}
+        onOpenChange={handlePlaylistDialogClose}
+        videoIds={Array.from(selectedVideoIds)}
+      />
+    )}
+    </>
   );
 }

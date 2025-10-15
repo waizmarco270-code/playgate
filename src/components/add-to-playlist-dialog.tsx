@@ -20,35 +20,43 @@ import { Label } from './ui/label';
 
 interface AddToPlaylistDialogProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  videoId: string;
+  onOpenChange: (open: boolean, updated?: boolean) => void;
+  videoIds: string[];
 }
 
 export function AddToPlaylistDialog({
   isOpen,
   onOpenChange,
-  videoId,
+  videoIds,
 }: AddToPlaylistDialogProps) {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylists, setSelectedPlaylists] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  const isBulkAdd = videoIds.length > 1;
+
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && videoIds.length > 0) {
       setIsLoading(true);
       db.getAllPlaylists().then(allPlaylists => {
         setPlaylists(allPlaylists);
-        const initialSelected = new Set<string>();
-        allPlaylists.forEach(p => {
-          if (p.videoIds.includes(videoId)) {
-            initialSelected.add(p.id);
-          }
-        });
-        setSelectedPlaylists(initialSelected);
+        // For single video add, pre-select playlists it's already in.
+        // For bulk add, start with no playlists selected.
+        if (!isBulkAdd) {
+            const initialSelected = new Set<string>();
+            allPlaylists.forEach(p => {
+                if (p.videoIds.includes(videoIds[0])) {
+                    initialSelected.add(p.id);
+                }
+            });
+            setSelectedPlaylists(initialSelected);
+        } else {
+            setSelectedPlaylists(new Set());
+        }
       }).finally(() => setIsLoading(false));
     }
-  }, [isOpen, videoId]);
+  }, [isOpen, videoIds, isBulkAdd]);
 
   const handleCheckedChange = (playlistId: string, checked: boolean | 'indeterminate') => {
     setSelectedPlaylists(prev => {
@@ -64,27 +72,33 @@ export function AddToPlaylistDialog({
 
   const handleSave = async () => {
     try {
-      // Add to selected playlists
-      for (const playlistId of Array.from(selectedPlaylists)) {
-        const playlist = playlists.find(p => p.id === playlistId);
-        if (playlist && !playlist.videoIds.includes(videoId)) {
+      const selectedPlaylistIds = Array.from(selectedPlaylists);
+      
+      // Bulk add to selected playlists
+      for (const playlistId of selectedPlaylistIds) {
+        for (const videoId of videoIds) {
+          // This function is idempotent, so it won't add duplicates
           await db.addVideoToPlaylist(playlistId, videoId);
         }
       }
 
-      // Remove from deselected playlists
-      const originalSelectedIds = playlists.filter(p => p.videoIds.includes(videoId)).map(p => p.id);
-      for (const playlistId of originalSelectedIds) {
-        if (!selectedPlaylists.has(playlistId)) {
-          await db.removeVideoFromPlaylist(playlistId, videoId);
-        }
+      // If it's not bulk add, we might need to handle removals from deselected playlists
+      if (!isBulkAdd) {
+         const videoId = videoIds[0];
+         const originalSelectedIds = playlists.filter(p => p.videoIds.includes(videoId)).map(p => p.id);
+         for (const playlistId of originalSelectedIds) {
+           if (!selectedPlaylists.has(playlistId)) {
+             await db.removeVideoFromPlaylist(playlistId, videoId);
+           }
+         }
       }
+
 
       toast({
         title: 'Success',
         description: 'Playlists updated successfully.',
       });
-      onOpenChange(false);
+      onOpenChange(false, true);
     } catch (error) {
       console.error("Failed to update playlists:", error);
       toast({
@@ -94,15 +108,18 @@ export function AddToPlaylistDialog({
       });
     }
   };
+  
+  const title = isBulkAdd ? `Add ${videoIds.length} Videos to Playlists` : 'Add to Playlist';
+  const description = isBulkAdd 
+    ? 'Select the playlists you want to add the selected videos to.'
+    : 'Select the playlists you want this video to be in.';
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add to Playlist</DialogTitle>
-          <DialogDescription>
-            Select the playlists you want to add this video to.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-64 pr-4">
           <div className="space-y-4 my-4">
@@ -112,11 +129,11 @@ export function AddToPlaylistDialog({
               playlists.map(playlist => (
                 <div key={playlist.id} className="flex items-center space-x-2">
                   <Checkbox
-                    id={playlist.id}
+                    id={`playlist-${playlist.id}`}
                     checked={selectedPlaylists.has(playlist.id)}
                     onCheckedChange={(checked) => handleCheckedChange(playlist.id, checked)}
                   />
-                  <Label htmlFor={playlist.id} className="font-normal w-full cursor-pointer">
+                  <Label htmlFor={`playlist-${playlist.id}`} className="font-normal w-full cursor-pointer">
                     {playlist.name}
                   </Label>
                 </div>

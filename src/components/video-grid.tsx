@@ -14,13 +14,19 @@ const VideoGridContent = ({
     onVideoDeleted, 
     onVideoRemovedFromPlaylist,
     context = 'library',
-    playlistId
+    playlistId,
+    isSelectionMode,
+    selectedVideoIds,
+    onVideoSelect,
 }: { 
     videos: VideoFile[], 
     onVideoDeleted: (videoId: string) => void,
     onVideoRemovedFromPlaylist?: (videoId: string) => void,
     context?: 'library' | 'playlist',
-    playlistId?: string
+    playlistId?: string,
+    isSelectionMode?: boolean,
+    selectedVideoIds?: Set<string>,
+    onVideoSelect?: (videoId: string) => void,
 }) => {
   return (
     <AnimatePresence>
@@ -39,6 +45,9 @@ const VideoGridContent = ({
             onVideoRemovedFromPlaylist={onVideoRemovedFromPlaylist}
             context={context}
             playlistId={playlistId}
+            isSelectionMode={isSelectionMode}
+            isSelected={selectedVideoIds?.has(video.id)}
+            onSelect={onVideoSelect}
           />
         </motion.div>
       ))}
