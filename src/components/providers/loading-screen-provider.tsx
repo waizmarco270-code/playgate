@@ -21,20 +21,28 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Only run animations if the setting is enabled and not just for the first session.
-    if (settingsLoading || !showLoadingScreen) {
-      setIsAnimationActive(false);
+    // Determine if this is the first visit of the session.
+    const isFirstVisit = !sessionStorage.getItem('playgate-session-started');
+
+    // If settings are still loading, don't do anything yet.
+    if (settingsLoading) {
+      setIsAnimationActive(true); // Default to active while loading settings
       return;
     }
-    
-    // Check if this is the first visit in the session
-    const isFirstVisit = !sessionStorage.getItem('playgate-session-started');
-    if (!isFirstVisit) {
+
+    // Conditions to show the animation:
+    // 1. It's the first visit of the session.
+    // 2. The user has the setting enabled.
+    const shouldShowAnimation = isFirstVisit && showLoadingScreen;
+
+    if (!shouldShowAnimation) {
       setIsAnimationActive(false);
       return;
     }
 
+    // If we're showing the animation, mark the session as started.
     sessionStorage.setItem('playgate-session-started', 'true');
+    
     const startTime = Date.now();
     
     const interval = setInterval(() => {
@@ -52,14 +60,18 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
     
   }, [showLoadingScreen, settingsLoading]);
   
+  // The actual loading state for the rest of the app.
+  // We consider it "loading" if the animation is active AND settings are done loading.
   const isLoading = isAnimationActive && !settingsLoading;
+
 
   return (
     <LoadingScreenContext.Provider value={{ isLoading }}>
         <AnimatePresence>
             {isLoading && <LoadingScreen progress={progress} />}
         </AnimatePresence>
-        {!isLoading && children}
+        {/* Render children immediately if settings are still loading or if animation is not active */}
+        {(settingsLoading || !isLoading) && children}
     </LoadingScreenContext.Provider>
   );
 }
