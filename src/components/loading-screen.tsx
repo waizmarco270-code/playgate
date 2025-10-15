@@ -5,14 +5,61 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
 import React from 'react';
+import { Film, Clapperboard, Video, PlayCircle, Monitor, Camera, Mic } from 'lucide-react';
 
-const ShutterEffect = () => (
-    <div className="absolute inset-0 z-20 pointer-events-none">
-        {/* The clip-path is animated via CSS to create the opening effect */}
-        <div className="w-full h-full bg-background animate-shutter-open" />
+const DigitalStreamBackground = () => {
+  const icons = [
+    { Icon: Film, style: 'animate-rain-1' },
+    { Icon: Clapperboard, style: 'animate-rain-2' },
+    { Icon: Video, style: 'animate-rain-3' },
+    { Icon: PlayCircle, style: 'animate-rain-1 animation-delay-700' },
+    { Icon: Monitor, style: 'animate-rain-2 animation-delay-300' },
+    { Icon: Camera, style: 'animate-rain-3 animation-delay-500' },
+    { Icon: Mic, style: 'animate-rain-1 animation-delay-200' },
+    { Icon: Film, style: 'animate-rain-2 animation-delay-800' },
+    { Icon: Video, style: 'animate-rain-3 animation-delay-400' },
+    { Icon: Clapperboard, style: 'animate-rain-1 animation-delay-600' },
+    { Icon: Monitor, style: 'animate-rain-2 animation-delay-100' },
+    { Icon: Camera, style: 'animate-rain-3 animation-delay-900' },
+  ];
+  return (
+    <div className="absolute inset-0 z-0 overflow-hidden">
+      {icons.map((item, index) => (
+        <item.Icon key={index} className={cn('absolute -top-1/4 text-primary/10', item.style)} />
+      ))}
+    </div>
+  );
+};
+DigitalStreamBackground.displayName = 'DigitalStreamBackground';
+
+
+const BlueprintGrid = () => (
+    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+        <div className="w-[300px] h-[300px] md:w-[400px] md:h-[400px] relative">
+            {/* Grid */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--primary)/0.1)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary)/0.1)_1px,transparent_1px)] bg-[size:2rem_2rem] animate-fade-in opacity-0 [animation-delay:0.2s]"></div>
+            
+            {/* Scanners */}
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-draw-line-h"></div>
+            <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-cyan-400 to-transparent animate-draw-line-v"></div>
+
+            {/* Corner brackets */}
+            <div className="absolute w-full h-full animate-spin-slow">
+                 <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-cyan-400 animate-fade-in-out"></div>
+                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-cyan-400 animate-fade-in-out"></div>
+                 <div className="absolute top-0 right-0 w-4 h-4 border-t border-r border-cyan-400/50 animate-fade-in-out [animation-delay:0.5s]"></div>
+                 <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l border-cyan-400/50 animate-fade-in-out [animation-delay:0.5s]"></div>
+            </div>
+
+             {/* Measurement text */}
+            <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-cyan-400/50 font-mono text-xs animate-fade-in opacity-0 [animation-delay:1s]">300.00 px</span>
+            <span className="absolute -right-5 top-1/2 -translate-y-1/2 -rotate-90 text-cyan-400/50 font-mono text-xs animate-fade-in opacity-0 [animation-delay:1.2s]">300.00 px</span>
+
+        </div>
     </div>
 );
-ShutterEffect.displayName = 'ShutterEffect';
+BlueprintGrid.displayName = 'BlueprintGrid';
+
 
 const FocusRing = () => (
     <div className="absolute inset-0 flex items-center justify-center z-0">
@@ -70,14 +117,13 @@ export function LoadingScreen({ progress }: { progress: number }) {
             initial="visible" // Start visible
             exit="exit"
             className={cn(
-                "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none",
-                isDark ? "bg-black" : "bg-neutral-900",
+                "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none animate-gradient-shift",
+                 isDark ? "bg-black" : "bg-neutral-900",
             )}
         >
-            {/* The Shutter Layer is on top and animates to reveal content */}
-            <ShutterEffect />
-            
-            {/* The content that gets revealed */}
+            <DigitalStreamBackground />
+             <BlueprintGrid />
+
             <div className="relative z-10 flex flex-col items-center justify-center text-center p-4">
                 
                 <FocusRing />
