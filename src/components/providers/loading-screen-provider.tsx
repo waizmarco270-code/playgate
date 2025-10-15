@@ -6,11 +6,11 @@ import { LoadingScreen } from '@/components/loading-screen';
 import { AnimatePresence } from 'framer-motion';
 
 const SESSION_KEY = 'playgate-session-loaded';
-const LOADING_DURATION = 10000; // 10 seconds
+const LOADING_DURATION = 5000; // 5 seconds
 
 export function LoadingScreenProvider({ children }: { children: React.ReactNode }) {
   const [isFirstVisit, setIsFirstVisit] = useState(false);
-  const [isAnimationActive, setIsAnimationActive] = useState(false);
+  const [showApp, setShowApp] = useState(false);
 
   useEffect(() => {
     // This effect runs only once on the client
@@ -19,32 +19,34 @@ export function LoadingScreenProvider({ children }: { children: React.ReactNode 
     if (!sessionLoaded) {
       // It's the first visit of the session
       setIsFirstVisit(true);
-      setIsAnimationActive(true);
       sessionStorage.setItem(SESSION_KEY, 'true');
 
-      // Set a timer to end the animation
+      // Set a timer to end the animation and show the app
       const timer = setTimeout(() => {
-        setIsAnimationActive(false);
+        setIsFirstVisit(false);
+        // A small delay before showing the app for smoother transition
+        setTimeout(() => setShowApp(true), 500); 
       }, LOADING_DURATION);
 
       return () => clearTimeout(timer);
+    } else {
+        // Not the first visit, show app immediately
+        setIsFirstVisit(false);
+        setShowApp(true);
     }
   }, []);
 
   // Show nothing until the client-side check is complete
-  if (typeof window === 'undefined') {
+  if (typeof window === 'undefined' || !showApp && !isFirstVisit) {
     return null;
   }
-
-  // If it's the first visit and animation is running, show the loading screen
-  if (isFirstVisit && isAnimationActive) {
-    return (
+  
+  return (
+    <>
       <AnimatePresence>
-        {isAnimationActive && <LoadingScreen />}
+        {isFirstVisit && <LoadingScreen />}
       </AnimatePresence>
-    );
-  }
-
-  // Otherwise, show the main application content
-  return <>{children}</>;
+      {showApp && children}
+    </>
+  );
 }
