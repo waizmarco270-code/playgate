@@ -5,22 +5,32 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
 import React from 'react';
-import { Film, Clapperboard, Video, PlayCircle, Monitor, Camera, Mic } from 'lucide-react';
+import { Film, Clapperboard, Video, PlayCircle, Monitor, Camera, Mic, Volume2, FastForward, Rewind, Aperture, Image as ImageIcon, Scissors, Tv, Youtube, Music, Podcast, PauseCircle } from 'lucide-react';
 
 const DigitalStreamBackground = () => {
   const icons = [
+    // Existing + New Icons & Animations
     { Icon: Film, style: 'animate-rain-1' },
     { Icon: Clapperboard, style: 'animate-rain-2' },
     { Icon: Video, style: 'animate-rain-3' },
-    { Icon: PlayCircle, style: 'animate-rain-1 animation-delay-700' },
-    { Icon: Monitor, style: 'animate-rain-2 animation-delay-300' },
-    { Icon: Camera, style: 'animate-rain-3 animation-delay-500' },
-    { Icon: Mic, style: 'animate-rain-1 animation-delay-200' },
-    { Icon: Film, style: 'animate-rain-2 animation-delay-800' },
-    { Icon: Video, style: 'animate-rain-3 animation-delay-400' },
-    { Icon: Clapperboard, style: 'animate-rain-1 animation-delay-600' },
-    { Icon: Monitor, style: 'animate-rain-2 animation-delay-100' },
-    { Icon: Camera, style: 'animate-rain-3 animation-delay-900' },
+    { Icon: PlayCircle, style: 'animate-rain-4 animation-delay-700' },
+    { Icon: Monitor, style: 'animate-rain-5 animation-delay-300' },
+    { Icon: Camera, style: 'animate-rain-6 animation-delay-500' },
+    { Icon: Mic, style: 'animate-rain-7 animation-delay-200' },
+    { Icon: Aperture, style: 'animate-rain-1 animation-delay-800' },
+    { Icon: ImageIcon, style: 'animate-rain-2 animation-delay-400' },
+    { Icon: Scissors, style: 'animate-rain-3 animation-delay-600' },
+    { Icon: Tv, style: 'animate-rain-4 animation-delay-100' },
+    { Icon: Youtube, style: 'animate-rain-5 animation-delay-900' },
+    { Icon: Music, style: 'animate-rain-6' },
+    { Icon: Podcast, style: 'animate-rain-7 animation-delay-300' },
+    { Icon: Volume2, style: 'animate-rain-1 animation-delay-500' },
+    { Icon: FastForward, style: 'animate-rain-2 animation-delay-200' },
+    { Icon: Rewind, style: 'animate-rain-3 animation-delay-800' },
+    { Icon: PauseCircle, style: 'animate-rain-4 animation-delay-400' },
+    { Icon: Film, style: 'animate-rain-5 animation-delay-600' },
+    { Icon: Clapperboard, style: 'animate-rain-6 animation-delay-100' },
+    { Icon: Video, style: 'animate-rain-7 animation-delay-900' },
   ];
   return (
     <div className="absolute inset-0 z-0 overflow-hidden">
@@ -216,3 +226,5 @@ export function LoadingScreen({ progress }: { progress: number }) {
         </motion.div>
     );
 }
+
+    
