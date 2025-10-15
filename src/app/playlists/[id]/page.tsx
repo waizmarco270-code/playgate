@@ -5,12 +5,13 @@ import { notFound, useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Film, ListVideo } from "lucide-react";
+import { ArrowLeft, Film, ListVideo, GripVertical } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VideoGrid } from '@/components/video-grid';
 import Link from 'next/link';
-import Image from 'next/image';
+import { Reorder } from 'framer-motion';
+import { VideoCard } from '@/components/video-card';
 
 export default function PlaylistDetailPage({ params }: { params: { id: string } }) {
     const [playlist, setPlaylist] = useState<Playlist | null>(null);
@@ -47,8 +48,6 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
     }, [loadPlaylistDetails]);
     
     const onVideoDeletedFromLibrary = (deletedVideoId: string) => {
-        // This is called when a video is deleted from the main library,
-        // which might also be in this playlist. We just need to refresh the view.
         setVideos(prev => prev.filter(v => v.id !== deletedVideoId));
         toast({
           title: "Video Removed",
@@ -73,6 +72,28 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
                 description: 'Could not remove the video from the playlist.',
                 variant: 'destructive',
             });
+        }
+    }
+
+    const handleReorder = async (newOrder: VideoFile[]) => {
+        if (!playlist) return;
+        setVideos(newOrder); // Optimistic UI update
+        const newVideoIds = newOrder.map(v => v.id);
+        try {
+            await db.updatePlaylistVideoOrder(playlist.id, newVideoIds);
+            toast({
+                title: "Playlist Updated",
+                description: "The video order has been saved."
+            });
+        } catch (error) {
+            console.error('Failed to reorder playlist:', error);
+            toast({
+                title: 'Error',
+                description: 'Could not save the new video order.',
+                variant: 'destructive',
+            });
+            // Revert on error
+            loadPlaylistDetails();
         }
     }
 
@@ -113,7 +134,7 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
                 </Button>
                 <div>
                     <h1 className="text-2xl font-bold">{playlist.name}</h1>
-                    <p className="text-muted-foreground">{playlist.description || 'No description'}</p>
+                    <p className="text-muted-foreground">{playlist.description || 'Drag and drop videos to reorder'}</p>
                 </div>
             </header>
             <main className="flex-1 p-6 overflow-y-auto">
@@ -129,15 +150,28 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
                         </Link>
                     </div>
                 ) : (
-                    <VideoGrid>
-                       <VideoGrid.Content 
-                            videos={videos} 
-                            onVideoDeleted={onVideoDeletedFromLibrary} 
-                            onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
-                            context="playlist"
-                            playlistId={playlist.id}
-                        />
-                    </VideoGrid>
+                    <Reorder.Group 
+                        axis="y" 
+                        values={videos} 
+                        onReorder={handleReorder}
+                        className="space-y-4 max-w-4xl mx-auto"
+                    >
+                       {videos.map(video => (
+                           <Reorder.Item key={video.id} value={video} className="relative">
+                               <VideoCard
+                                    video={video}
+                                    onVideoDeleted={onVideoDeletedFromLibrary} 
+                                    onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
+                                    context="playlist"
+                                    playlistId={playlist.id}
+                                    layout="list"
+                               />
+                               <div className="absolute top-1/2 -translate-y-1/2 -left-8 text-muted-foreground cursor-grab active:cursor-grabbing">
+                                 <GripVertical />
+                               </div>
+                           </Reorder.Item>
+                       ))}
+                    </Reorder.Group>
                 )}
             </main>
         </div>

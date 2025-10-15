@@ -315,6 +315,14 @@ class IndexedDBManager {
     });
   }
 
+  async updatePlaylistVideoOrder(playlistId: string, videoIds: string[]): Promise<void> {
+    const playlist = await this.getPlaylist(playlistId);
+    if (playlist) {
+      playlist.videoIds = videoIds;
+      await this.updatePlaylist(playlist);
+    }
+  }
+
   async deletePlaylist(id: string): Promise<void> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
