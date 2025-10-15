@@ -337,7 +337,7 @@ export default function PlaylistDetailPage() {
                         <div className="flex items-center gap-2">
                             <Button
                                 variant="destructive"
-                                onClick={()={() => setIsBulkDeleteDialogOpen(true)}}
+                                onClick={() => setIsBulkDeleteDialogOpen(true)}
                                 disabled={selectedVideoIds.size === 0}
                             >
                                 <Trash2 className="mr-2 h-4 w-4" /> Remove from Playlist
@@ -387,11 +387,6 @@ export default function PlaylistDetailPage() {
                                     isSelected={selectedVideoIds.has(video.id)}
                                     onSelect={handleVideoSelect}
                                />
-                               {!isSelectionMode && (
-                                <div className="absolute top-1/2 -translate-y-1/2 -left-8 text-muted-foreground cursor-grab active:cursor-grabbing">
-                                    <GripVertical />
-                                </div>
-                               )}
                            </Reorder.Item>
                        ))}
                     </Reorder.Group>

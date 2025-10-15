@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2, Edit, Shield, ShieldOff, Check } from 'lucide-react';
+import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2, Edit, Shield, ShieldOff, Check, GripVertical } from 'lucide-react';
 import type { VideoFile } from '@/lib/types';
 import { formatDuration, cn } from '@/lib/utils';
 import {
@@ -128,6 +128,11 @@ export function VideoCard({
           )}>
             <CardContent className="p-0">
               <div className="flex items-center">
+                {!isSelectionMode && context === 'playlist' && (
+                  <div className="hidden md:block pl-2 text-muted-foreground cursor-grab active:cursor-grabbing">
+                      <GripVertical />
+                  </div>
+                )}
                 <div className="relative flex-shrink-0">
                   <Wrapper {...wrapperProps} className="flex-shrink-0">
                     <div className="relative aspect-video w-48 bg-secondary">
