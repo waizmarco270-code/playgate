@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { notFound, useRouter, useSearchParams } from 'next/navigation';
+import { notFound, useRouter, useSearchParams, useParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
 import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera, AudioLines, Captions } from 'lucide-react';
@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/popover"
 import { useInterval } from 'usehooks-ts';
 
-export default function PlayerPage({ params }: { params: { id: string } }) {
+export default function PlayerPage() {
+  const params = useParams<{ id: string }>();
   const [videoMetadata, setVideoMetadata] = useState<VideoFile | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,16 +49,9 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const hasStartedFromSavedTime = useRef(false);
-  
+
   const isPrevEnabled = playlist ? currentVideoIndex > 0 : false;
   const isNextEnabled = playlist ? currentVideoIndex < playlist.videoIds.length - 1 : false;
-
-  const handlePrev = useCallback(() => {
-      if (playlist && isPrevEnabled) {
-          const prevVideoId = playlist.videoIds[currentVideoIndex - 1];
-          router.push(`/player/${prevVideoId}?playlist=${playlistId}`);
-      }
-  }, [playlist, isPrevEnabled, currentVideoIndex, router, playlistId]);
 
   const handleNext = useCallback(() => {
       if (playlist && isNextEnabled) {
@@ -65,6 +59,14 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
           router.push(`/player/${nextVideoId}?playlist=${playlistId}`);
       }
   }, [playlist, isNextEnabled, currentVideoIndex, router, playlistId]);
+  
+  const handlePrev = useCallback(() => {
+      if (playlist && isPrevEnabled) {
+          const prevVideoId = playlist.videoIds[currentVideoIndex - 1];
+          router.push(`/player/${prevVideoId}?playlist=${playlistId}`);
+      }
+  }, [playlist, isPrevEnabled, currentVideoIndex, router, playlistId]);
+
 
   useEffect(() => {
     const loadVideo = async () => {
@@ -134,7 +136,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
         URL.revokeObjectURL(videoUrl);
       }
     };
-  }, [params.id, playlistId, toast]);
+  }, [params.id, playlistId, toast, videoUrl]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -213,39 +215,45 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     }
     
     // Setup audio and text tracks
-    const audioTrackList = Array.from(video.audioTracks);
-    setAudioTracks(audioTrackList);
-    const enabledAudioTrack = audioTrackList.find(t => t.enabled);
-    if(enabledAudioTrack) setSelectedAudioTrackId(enabledAudioTrack.id);
+    if (video.audioTracks) {
+      const audioTrackList = Array.from(video.audioTracks);
+      setAudioTracks(audioTrackList);
+      const enabledAudioTrack = audioTrackList.find(t => t.enabled);
+      if(enabledAudioTrack) setSelectedAudioTrackId(enabledAudioTrack.id);
+    }
 
-    const textTrackList = Array.from(video.textTracks);
-    setTextTracks(textTrackList);
-    const visibleTextTrack = textTrackList.find(t => t.mode === 'showing');
-    if (visibleTextTrack) {
-        setSelectedTextTrackId(visibleTextTrack.id);
-    } else {
-        setSelectedTextTrackId('off');
+    if (video.textTracks) {
+      const textTrackList = Array.from(video.textTracks);
+      setTextTracks(textTrackList);
+      const visibleTextTrack = textTrackList.find(t => t.mode === 'showing');
+      if (visibleTextTrack) {
+          setSelectedTextTrackId(visibleTextTrack.id);
+      } else {
+          setSelectedTextTrackId('off');
+      }
     }
   };
   
   // Handlers for changing tracks
   const handleAudioTrackChange = (trackId: string) => {
-    if(!videoRef.current) return;
-    videoRef.current.audioTracks.forEach(track => {
-      track.enabled = track.id === trackId;
-    });
+    if(!videoRef.current || !videoRef.current.audioTracks) return;
+    for (let i = 0; i < videoRef.current.audioTracks.length; i++) {
+        const track = videoRef.current.audioTracks[i];
+        track.enabled = track.id === trackId;
+    }
     setSelectedAudioTrackId(trackId);
   }
 
   const handleTextTrackChange = (trackId: string) => {
-    if(!videoRef.current) return;
-    videoRef.current.textTracks.forEach(track => {
+    if(!videoRef.current || !videoRef.current.textTracks) return;
+     for (let i = 0; i < videoRef.current.textTracks.length; i++) {
+        const track = videoRef.current.textTracks[i];
         if (trackId === 'off') {
              track.mode = 'disabled';
         } else {
             track.mode = track.id === trackId ? 'showing' : 'hidden';
         }
-    });
+    }
     setSelectedTextTrackId(trackId);
   }
 
@@ -436,7 +444,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                         <DropdownMenuRadioGroup value={selectedTextTrackId} onValueChange={handleTextTrackChange}>
                            <DropdownMenuRadioItem value="off">Off</DropdownMenuRadioItem>
                            {textTracks.map(track => (
-                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
+                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioe>
                           ))}
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
@@ -487,5 +495,3 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
-
-    
