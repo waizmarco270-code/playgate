@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
+import { Film, Clapperboard, Video, PlayCircle, SlidersHorizontal, Camera } from 'lucide-react';
 
 export function LoadingScreen({ progress }: { progress: number }) {
     const { resolvedTheme } = useTheme();
@@ -53,12 +54,15 @@ export function LoadingScreen({ progress }: { progress: number }) {
                 isDark ? "bg-gradient-to-br from-[#0A0A0A] to-[#141414]" : "bg-gradient-to-br from-[#FFFFFF] to-[#E8E8E8]"
             )}
         >
-            {/* Particle Effect */}
+            {/* Raining Icons Effect */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute w-[1px] h-[1px] bg-white/30 rounded-full animate-particle-1"></div>
-                <div className="absolute w-[2px] h-[2px] bg-white/30 rounded-full animate-particle-2"></div>
-                <div className="absolute w-[1px] h-[1px] bg-white/30 rounded-full animate-particle-3"></div>
-                <div className="absolute w-[3px] h-[3px] bg-white/30 rounded-full animate-particle-4"></div>
+                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-1" />
+                <Clapperboard className="absolute h-6 w-6 text-primary/10 animate-rain-2" />
+                <Video className="absolute h-10 w-10 text-primary/10 animate-rain-3" />
+                <PlayCircle className="absolute h-8 w-8 text-primary/10 animate-rain-4" />
+                <SlidersHorizontal className="absolute h-6 w-6 text-primary/10 animate-rain-5" />
+                <Camera className="absolute h-7 w-7 text-primary/10 animate-rain-6" />
+                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-7" />
             </div>
 
             <div className="relative flex flex-col items-center justify-center text-center">
