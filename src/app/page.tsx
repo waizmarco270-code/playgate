@@ -108,7 +108,7 @@ const Header = ({
                             <h1 className="text-2xl font-bold">Video Library</h1>
                         </div>
                         <div className="flex items-center gap-2 w-full md:w-auto">
-                            <div className="relative flex-1">
+                            <div className="relative flex-1 md:w-64">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="search"
@@ -280,8 +280,7 @@ export default function HomePage() {
   );
 
   return (
-    <>
-    <div className="flex flex-col h-full">
+    <div className="relative flex flex-col h-full">
       <Header 
         onImportClick={handleImportClick} 
         onSearchTermChange={setSearchTerm}
@@ -341,7 +340,15 @@ export default function HomePage() {
             </VideoGrid>
         )}
       </main>
+      
+      <Button
+        onClick={handleImportClick}
+        className="md:hidden fixed bottom-24 right-6 h-14 w-14 rounded-full shadow-lg z-40"
+        size="icon"
+      >
+        <Plus className="h-6 w-6" />
+        <span className="sr-only">Import Video</span>
+      </Button>
     </div>
-    </>
   );
 }
