@@ -9,6 +9,7 @@ import { PlaylistCard } from '@/components/playlist-card';
 import { CreatePlaylistDialog } from '@/components/create-playlist-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function PlaylistsPage() {
     const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -58,7 +59,10 @@ export default function PlaylistsPage() {
     <>
     <div className="flex flex-col h-full">
         <header className="flex items-center justify-between p-4 border-b">
-            <h1 className="text-2xl font-bold">Playlists</h1>
+            <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                <h1 className="text-2xl font-bold">Playlists</h1>
+            </div>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" /> Create Playlist
             </Button>

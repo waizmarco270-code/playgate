@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { HardDriveDownload, HardDriveUpload, Trash2 } from 'lucide-react';
@@ -35,7 +36,10 @@ export default function SettingsPage() {
     return (
         <div className="flex flex-col h-full">
             <header className="p-4 border-b">
-                <h1 className="text-2xl font-bold">Settings</h1>
+                <div className="flex items-center gap-2">
+                    <SidebarTrigger />
+                    <h1 className="text-2xl font-bold">Settings</h1>
+                </div>
             </header>
             <main className="flex-1 p-6 overflow-y-auto">
                 <div className="max-w-2xl mx-auto space-y-8">

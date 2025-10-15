@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Reorder } from 'framer-motion';
 import { VideoCard } from '@/components/video-card';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function PlaylistDetailPage() {
     const params = useParams<{ id: string }>();
@@ -146,8 +147,9 @@ export default function PlaylistDetailPage() {
     return (
         <div className="flex flex-col h-full">
             <header className="flex items-center justify-between gap-4 p-4 border-b">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')}>
+                <div className="flex items-center gap-2">
+                    <SidebarTrigger className="md:hidden" />
+                    <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')} className="hidden md:inline-flex">
                         <ArrowLeft />
                     </Button>
                     <div>

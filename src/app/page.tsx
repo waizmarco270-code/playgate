@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical } from 'lucide-react';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function HomePage() {
   const [videos, setVideos] = useState<VideoFile[]>([]);
@@ -159,7 +160,10 @@ export default function HomePage() {
 
     return (
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-b w-full">
-            <h1 className="text-2xl font-bold self-start md:self-center">Video Library</h1>
+             <div className="flex items-center gap-2 self-start md:self-center">
+                <SidebarTrigger className="h-10 w-10 md:hidden" />
+                <h1 className="text-2xl font-bold">Video Library</h1>
+            </div>
             <div className="flex items-center gap-2 w-full md:w-auto">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
