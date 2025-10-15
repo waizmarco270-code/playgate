@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AnimatePresence } from 'framer-motion';
 
-const LOADING_DURATION = 3000; // 3 seconds
+const LOADING_DURATION = 5000; // 5 seconds
 
 const LoadingScreenContext = createContext<{
   isLoading: boolean;
