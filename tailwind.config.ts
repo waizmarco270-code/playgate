@@ -105,6 +105,10 @@ export default {
             '90%': { opacity: '1' },
             '100%': { transform: 'translateY(110vh) rotate(360deg)', opacity: '0' },
         },
+        'gradient-shift': {
+            '0%, 100%': { 'background-position': '0% 50%' },
+            '50%': { 'background-position': '100% 50%' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -118,6 +122,7 @@ export default {
         'rain-5': 'rain 20s linear 8s infinite',
         'rain-6': 'rain 13s linear 10s infinite',
         'rain-7': 'rain 16s linear 12s infinite',
+        'gradient-shift': 'gradient-shift 15s ease infinite',
       },
     },
   },

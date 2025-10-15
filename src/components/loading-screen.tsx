@@ -51,7 +51,8 @@ export function LoadingScreen({ progress }: { progress: number }) {
             exit="exit"
             className={cn(
                 "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none",
-                isDark ? "bg-gradient-to-br from-[#0A0A0A] to-[#141414]" : "bg-gradient-to-br from-[#FFFFFF] to-[#E8E8E8]"
+                "bg-[length:400%_400%] animate-gradient-shift",
+                isDark ? "bg-gradient-to-br from-[#0A0A0A] via-[#121212] to-[#0A0A0A]" : "bg-gradient-to-br from-[#f0f0f0] via-[#FFFFFF] to-[#E8E8E8]"
             )}
         >
             {/* Raining Icons Effect */}
