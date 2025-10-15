@@ -1,7 +1,7 @@
 
 'use client';
-import { useEffect, useState, useCallback } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback, use } from 'react';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,8 @@ import Link from 'next/link';
 import { Reorder } from 'framer-motion';
 import { VideoCard } from '@/components/video-card';
 
-export default function PlaylistDetailPage({ params }: { params: { id: string } }) {
+export default function PlaylistDetailPage() {
+    const params = useParams<{ id: string }>();
     const [playlist, setPlaylist] = useState<Playlist | null>(null);
     const [videos, setVideos] = useState<VideoFile[]>([]);
     const [loading, setLoading] = useState(true);

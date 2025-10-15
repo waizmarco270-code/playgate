@@ -42,6 +42,23 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const hasStartedFromSavedTime = useRef(false);
 
+  const isPrevEnabled = playlist ? currentVideoIndex > 0 : false;
+  const isNextEnabled = playlist ? currentVideoIndex < playlist.videoIds.length - 1 : false;
+
+  const handlePrev = useCallback(() => {
+      if (playlist && isPrevEnabled) {
+          const prevVideoId = playlist.videoIds[currentVideoIndex - 1];
+          router.push(`/player/${prevVideoId}?playlist=${playlistId}`);
+      }
+  }, [playlist, isPrevEnabled, currentVideoIndex, router, playlistId]);
+
+  const handleNext = useCallback(() => {
+      if (playlist && isNextEnabled) {
+          const nextVideoId = playlist.videoIds[currentVideoIndex + 1];
+          router.push(`/player/${nextVideoId}?playlist=${playlistId}`);
+      }
+  }, [playlist, isNextEnabled, currentVideoIndex, router, playlistId]);
+
   useEffect(() => {
     const loadVideo = async () => {
       setLoading(true);
@@ -249,25 +266,6 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
       }
     }, 'image/jpeg', 0.8);
   }, [videoMetadata, toast]);
-
-
-  const isPrevEnabled = playlist ? currentVideoIndex > 0 : false;
-  const isNextEnabled = playlist ? currentVideoIndex < playlist.videoIds.length - 1 : false;
-
-  // Using useCallback to memoize these functions
-  const handlePrev = useCallback(() => {
-      if (playlist && isPrevEnabled) {
-          const prevVideoId = playlist.videoIds[currentVideoIndex - 1];
-          router.push(`/player/${prevVideoId}?playlist=${playlistId}`);
-      }
-  }, [playlist, isPrevEnabled, currentVideoIndex, router, playlistId]);
-
-  const handleNext = useCallback(() => {
-      if (playlist && isNextEnabled) {
-          const nextVideoId = playlist.videoIds[currentVideoIndex + 1];
-          router.push(`/player/${nextVideoId}?playlist=${playlistId}`);
-      }
-  }, [playlist, isNextEnabled, currentVideoIndex, router, playlistId]);
 
   const handleVideoEnded = () => {
     if (isNextEnabled) {
