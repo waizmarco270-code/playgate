@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
 
-export function LoadingScreen() {
+export function LoadingScreen({ progress }: { progress: number }) {
     const { resolvedTheme } = useTheme();
     const isDark = resolvedTheme === 'dark';
 
@@ -107,8 +107,8 @@ export function LoadingScreen() {
                 </motion.p>
             </div>
             
-            {/* Signature Zone */}
-            <div className="absolute bottom-10 text-center">
+            {/* Signature & Progress Zone */}
+            <div className="absolute bottom-6 md:bottom-10 text-center w-full max-w-xs px-4">
                  <motion.p
                     variants={signatureVariants(1.2)}
                     initial="hidden"
@@ -129,6 +129,23 @@ export function LoadingScreen() {
                  >
                     Developed by Waiz Marco
                  </motion.p>
+                 
+                 <motion.div
+                    variants={signatureVariants(2.2)}
+                    initial="hidden"
+                    animate="visible"
+                    className="w-full mt-8"
+                 >
+                    <p className="text-xs font-mono text-cyan-400 mb-2">{Math.round(progress)}%</p>
+                    <div className="w-full h-1.5 rounded-full bg-cyan-400/20 overflow-hidden">
+                        <motion.div
+                            className="h-full rounded-full bg-gradient-to-r from-teal-300 via-sky-400 to-indigo-500 animate-shimmer bg-[length:200%_100%]"
+                            initial={{ width: '0%' }}
+                            animate={{ width: `${progress}%` }}
+                            transition={{ duration: 0.2, ease: 'linear' }}
+                        />
+                    </div>
+                </motion.div>
             </div>
         </motion.div>
     );

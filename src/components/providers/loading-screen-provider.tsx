@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { LoadingScreen } from '@/components/loading-screen';
 import { AnimatePresence } from 'framer-motion';
 
+const LOADING_DURATION = 3000; // 3 seconds
+
 const LoadingScreenContext = createContext<{
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
@@ -16,19 +18,31 @@ export const useLoadingScreen = () => useContext(LoadingScreenContext);
 
 export function LoadingScreenProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 3500); // Keep loading screen for 3.5 seconds
+    if (isLoading) {
+      const startTime = Date.now();
+      
+      const interval = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        const currentProgress = Math.min(100, (elapsedTime / LOADING_DURATION) * 100);
+        setProgress(currentProgress);
 
-    return () => clearTimeout(timer);
-  }, []);
+        if (currentProgress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsLoading(false), 500); // Short delay for animation to finish
+        }
+      }, 50); // Update progress frequently for smoothness
+
+      return () => clearInterval(interval);
+    }
+  }, [isLoading]);
   
   return (
     <LoadingScreenContext.Provider value={{ isLoading, setIsLoading }}>
         <AnimatePresence>
-            {isLoading && <LoadingScreen />}
+            {isLoading && <LoadingScreen progress={progress} />}
         </AnimatePresence>
         {!isLoading && children}
     </LoadingScreenContext.Provider>
