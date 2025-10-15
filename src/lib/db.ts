@@ -1,4 +1,5 @@
 
+
 'use client';
 import { generateVideoThumbnail, getVideoDuration } from './utils';
 import type { VideoFile, VideoFileHandle, StoredVideoFile } from './types';
@@ -77,6 +78,8 @@ class IndexedDBManager {
           size: file.size,
           type: file.type,
           video: file, // Store the file blob itself
+          currentTime: 0,
+          progress: 0,
         };
         
         const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
@@ -150,6 +153,27 @@ class IndexedDBManager {
         onComplete();
       };
       handleRequest.onerror = () => reject(handleRequest.error);
+    });
+  }
+
+  async updateVideoProgress(id: string, currentTime: number, progress: number): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(VIDEO_STORE, 'readwrite');
+        const store = tx.objectStore(VIDEO_STORE);
+        const request = store.get(id);
+
+        request.onsuccess = () => {
+            const videoData = request.result;
+            if (videoData) {
+                videoData.currentTime = currentTime;
+                videoData.progress = progress;
+                videoData.lastPlayed = Date.now();
+                store.put(videoData);
+            }
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
     });
   }
 

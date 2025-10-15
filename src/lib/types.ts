@@ -1,4 +1,5 @@
 
+
 export interface VideoFile {
   id: string;
   name: string;
@@ -9,6 +10,8 @@ export interface VideoFile {
   favorited: boolean;
   size: number;
   type: string;
+  currentTime?: number;
+  progress?: number; // 0-100
 }
 
 export interface StoredVideoFile extends VideoFile {

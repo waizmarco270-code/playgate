@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { VideoFile } from '@/lib/types';
@@ -22,6 +22,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useInterval } from 'usehooks-ts';
 
 export default function PlayerPage({ params }: { params: { id: string } }) {
   const [videoMetadata, setVideoMetadata] = useState<VideoFile | null>(null);
@@ -32,11 +33,13 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const hasStartedFromSavedTime = useRef(false);
 
   useEffect(() => {
     const loadVideo = async () => {
       setLoading(true);
       setError(null);
+      hasStartedFromSavedTime.current = false;
       try {
         const videoData = await db.getVideo(params.id);
 
@@ -98,6 +101,28 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
       videoRef.current.playbackRate = Number(playbackRate);
     }
   }, [playbackRate]);
+
+  const handleCanPlay = () => {
+    if (videoRef.current && videoMetadata?.currentTime && !hasStartedFromSavedTime.current) {
+      // Only seek if progress is not at the very beginning or end
+      if (videoMetadata.currentTime > 1 && videoMetadata.currentTime < videoMetadata.duration - 1) {
+        videoRef.current.currentTime = videoMetadata.currentTime;
+      }
+      hasStartedFromSavedTime.current = true;
+    }
+  };
+
+  useInterval(
+    async () => {
+      if (videoRef.current && !videoRef.current.paused && videoMetadata) {
+        const currentTime = videoRef.current.currentTime;
+        const duration = videoRef.current.duration;
+        const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
+        await db.updateVideoProgress(videoMetadata.id, currentTime, progress);
+      }
+    },
+    5000 // Save progress every 5 seconds
+  );
 
   const handleTogglePiP = async () => {
     if (!videoRef.current) return;
@@ -227,6 +252,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
               controls
               autoPlay
               className="w-full h-full"
+              onCanPlay={handleCanPlay}
             />
           )}
         </div>

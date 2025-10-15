@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { db } from '@/lib/db';
+import { Progress } from './ui/progress';
 
 interface VideoCardProps {
   video: VideoFile;
@@ -65,6 +67,9 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
             <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md">
               {formattedDuration}
             </span>
+             {video.progress && video.progress > 0 && video.progress < 99 && (
+              <Progress value={video.progress} className="absolute bottom-0 h-1 rounded-none" />
+            )}
           </div>
           <div className="p-4">
             <div className="flex justify-between items-start">
