@@ -1,3 +1,4 @@
+
 'use client';
 
 import { VideoCard } from '@/components/video-card';
@@ -8,7 +9,17 @@ interface VideoGridProps {
   children: React.ReactNode;
 }
 
-const VideoGridContent = ({ videos, onVideoDeleted }: { videos: VideoFile[], onVideoDeleted: (videoId: string) => void }) => {
+const VideoGridContent = ({ 
+    videos, 
+    onVideoDeleted, 
+    onVideoRemovedFromPlaylist,
+    context = 'library'
+}: { 
+    videos: VideoFile[], 
+    onVideoDeleted: (videoId: string) => void,
+    onVideoRemovedFromPlaylist?: (videoId: string) => void,
+    context?: 'library' | 'playlist'
+}) => {
   return (
     <AnimatePresence>
       {videos.map((video) => (
@@ -20,7 +31,12 @@ const VideoGridContent = ({ videos, onVideoDeleted }: { videos: VideoFile[], onV
           exit={{ opacity: 0, scale: 0.8 }}
           transition={{ duration: 0.3 }}
         >
-          <VideoCard video={video} onVideoDeleted={onVideoDeleted} />
+          <VideoCard 
+            video={video} 
+            onVideoDeleted={onVideoDeleted} 
+            onVideoRemovedFromPlaylist={onVideoRemovedFromPlaylist}
+            context={context}
+          />
         </motion.div>
       ))}
     </AnimatePresence>

@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Trash2, ListPlus } from 'lucide-react';
+import { MoreHorizontal, Trash2, ListPlus, XCircle } from 'lucide-react';
 import type { VideoFile } from '@/lib/types';
 import { formatDuration } from '@/lib/utils';
 import {
@@ -23,9 +23,16 @@ import { AddToPlaylistDialog } from './add-to-playlist-dialog';
 interface VideoCardProps {
   video: VideoFile;
   onVideoDeleted: (videoId: string) => void;
+  onVideoRemovedFromPlaylist?: (videoId: string) => void;
+  context?: 'library' | 'playlist';
 }
 
-export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
+export function VideoCard({ 
+  video, 
+  onVideoDeleted,
+  onVideoRemovedFromPlaylist,
+  context = 'library'
+}: VideoCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
@@ -42,6 +49,12 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
     await db.deleteVideo(video.id);
     onVideoDeleted(video.id);
   };
+  
+  const handleRemoveFromPlaylist = () => {
+    if(onVideoRemovedFromPlaylist) {
+        onVideoRemovedFromPlaylist(video.id);
+    }
+  }
 
   const formattedDuration = useMemo(() => formatDuration(video.duration), [video.duration]);
 
@@ -88,13 +101,23 @@ export function VideoCard({ video, onVideoDeleted }: VideoCardProps) {
                     <ListPlus className="mr-2 h-4 w-4" />
                     <span>Add to Playlist</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => setIsDeleteDialogOpen(true)} 
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    <span>Delete</span>
-                  </DropdownMenuItem>
+                  {context === 'playlist' && onVideoRemovedFromPlaylist ? (
+                    <DropdownMenuItem 
+                      onClick={handleRemoveFromPlaylist}
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      <span>Remove from Playlist</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem 
+                      onClick={() => setIsDeleteDialogOpen(true)} 
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      <span>Delete from Library</span>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

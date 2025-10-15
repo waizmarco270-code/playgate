@@ -155,7 +155,7 @@ export default function HomePage() {
           </div>
         ) : (
           <VideoGrid>
-            <VideoGrid.Content videos={filteredVideos} onVideoDeleted={onVideoDeleted} />
+            <VideoGrid.Content videos={filteredVideos} onVideoDeleted={onVideoDeleted} context="library" />
           </VideoGrid>
         )}
       </main>

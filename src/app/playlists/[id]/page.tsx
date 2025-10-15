@@ -46,16 +46,33 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
         loadPlaylistDetails();
     }, [loadPlaylistDetails]);
     
-    const onVideoDeleted = (deletedVideoId: string) => {
+    const onVideoDeletedFromLibrary = (deletedVideoId: string) => {
         // This is called when a video is deleted from the main library,
-        // which might also be in this playlist.
+        // which might also be in this playlist. We just need to refresh the view.
         setVideos(prev => prev.filter(v => v.id !== deletedVideoId));
-        // We don't need to call db.removeVideoFromPlaylist here because
-        // db.deleteVideo already handles removing it from all playlists.
-         toast({
+        toast({
           title: "Video Removed",
-          description: "The video has been removed from this playlist.",
+          description: "The video has been removed from this playlist because it was deleted from the library.",
         });
+    }
+
+    const handleRemoveVideoFromPlaylist = async (videoId: string) => {
+        if (!playlist) return;
+        try {
+            await db.removeVideoFromPlaylist(playlist.id, videoId);
+            setVideos(prev => prev.filter(v => v.id !== videoId));
+            toast({
+                title: "Video Removed",
+                description: "The video has been removed from this playlist.",
+            });
+        } catch (error) {
+             console.error('Failed to remove video from playlist:', error);
+            toast({
+                title: 'Error',
+                description: 'Could not remove the video from the playlist.',
+                variant: 'destructive',
+            });
+        }
     }
 
     if (loading) {
@@ -112,11 +129,15 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
                     </div>
                 ) : (
                     <VideoGrid>
-                       <VideoGrid.Content videos={videos} onVideoDeleted={onVideoDeleted} />
+                       <VideoGrid.Content 
+                            videos={videos} 
+                            onVideoDeleted={onVideoDeletedFromLibrary} 
+                            onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
+                            context="playlist"
+                        />
                     </VideoGrid>
                 )}
             </main>
         </div>
     );
 }
-
