@@ -15,14 +15,17 @@ const LoadingScreenContext = createContext<{
 export const useLoadingScreen = () => useContext(LoadingScreenContext);
 
 export function LoadingScreenProvider({ children }: { children: ReactNode }) {
-  const [isAnimationActive, setIsAnimationActive] = useState(true);
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  const [isFirstVisit, setIsFirstVisit] = useState(false);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const isFirstVisit = !sessionStorage.getItem('playgate-session-started');
+    // This check must run only once on the client
+    const firstVisit = !sessionStorage.getItem('playgate-session-started');
+    setIsFirstVisit(firstVisit);
 
-    if (!isFirstVisit) {
-      setIsAnimationActive(false);
+    if (!firstVisit) {
+      setIsAnimationComplete(true);
       return;
     }
 
@@ -37,22 +40,29 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
 
       if (currentProgress >= 100) {
         clearInterval(interval);
-        setTimeout(() => setIsAnimationActive(false), 500); 
       }
     }, 50);
 
-    return () => clearInterval(interval);
+    // Set a timeout to mark the animation as complete after the full duration
+    const animationTimeout = setTimeout(() => {
+        setIsAnimationComplete(true);
+    }, LOADING_DURATION + 500); // Add a small buffer
+
+    return () => {
+        clearInterval(interval);
+        clearTimeout(animationTimeout);
+    };
     
   }, []);
   
-  const isLoading = isAnimationActive;
+  const showAnimation = isFirstVisit && !isAnimationComplete;
 
   return (
-    <LoadingScreenContext.Provider value={{ isLoading }}>
+    <LoadingScreenContext.Provider value={{ isLoading: showAnimation }}>
         <AnimatePresence>
-            {isLoading && <LoadingScreen progress={progress} />}
+            {showAnimation && <LoadingScreen progress={progress} />}
         </AnimatePresence>
-        {!isLoading && children}
+        {isAnimationComplete && children}
     </LoadingScreenContext.Provider>
   );
 }
