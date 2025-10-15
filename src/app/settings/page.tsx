@@ -8,17 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
-import { HardDriveDownload, HardDriveUpload, Trash2, Zap } from 'lucide-react';
+import { HardDriveDownload, HardDriveUpload, Trash2 } from 'lucide-react';
 import { useRef } from 'react';
-import { useAppSettings } from '@/components/providers/settings-provider';
-import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const { toast } = useToast();
     const importInputRef = useRef<HTMLInputElement>(null);
-    const { showLoadingScreen, setShowLoadingScreen, isLoading: settingsLoading } = useAppSettings();
 
     const handleReset = async () => {
         if(confirm('Are you sure you want to delete all your data? This action cannot be undone.')) {
@@ -129,19 +125,6 @@ export default function SettingsPage() {
                                         <SelectItem value="system">System</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label htmlFor="loading-animation" className="flex flex-col gap-1 flex-1">
-                                    <span>Startup Animation</span>
-                                    <span className="font-normal text-xs text-muted-foreground">Show the animation when the app opens.</span>
-                                </Label>
-                                {settingsLoading ? <Skeleton className="h-6 w-11" /> : (
-                                    <Switch
-                                        id="loading-animation"
-                                        checked={showLoadingScreen}
-                                        onCheckedChange={setShowLoadingScreen}
-                                    />
-                                )}
                             </div>
                         </CardContent>
                     </Card>

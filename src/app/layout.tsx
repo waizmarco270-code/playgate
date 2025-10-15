@@ -10,7 +10,6 @@ import Script from 'next/script';
 import { LoadingScreenProvider } from '@/components/providers/loading-screen-provider';
 import BottomNav from '@/components/layout/bottom-nav';
 import { VaultProvider } from '@/components/providers/vault-provider';
-import { SettingsProvider } from '@/components/providers/settings-provider';
 
 export const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
@@ -37,7 +36,6 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased')}>
         <ThemeProvider>
-          <SettingsProvider>
             <LoadingScreenProvider>
               <VaultProvider>
                 <SidebarProvider>
@@ -52,7 +50,6 @@ export default function RootLayout({
               </VaultProvider>
               <Toaster />
             </LoadingScreenProvider>
-          </SettingsProvider>
         </ThemeProvider>
         <Script id="service-worker-registration">
           {`
