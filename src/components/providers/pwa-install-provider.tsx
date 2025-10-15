@@ -42,14 +42,17 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       setIsVisible(false);
       setInstallPrompt(null);
       setCanInstall(false);
-    });
+    };
+    
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
@@ -64,6 +67,7 @@ export function PWAInstallProvider({ children }: { children: React.ReactNode }) 
     } else {
       console.log('User dismissed the install prompt');
     }
+    // The prompt can only be used once. Clear it.
     setInstallPrompt(null);
     setCanInstall(false);
     setIsVisible(false);
