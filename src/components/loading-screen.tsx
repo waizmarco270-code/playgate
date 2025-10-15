@@ -123,8 +123,10 @@ export function LoadingScreen({ progress }: { progress: number }) {
             initial="visible" // Start visible
             exit="exit"
             className={cn(
-                "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none animate-gradient-shift",
-                 isDark ? "bg-black" : "bg-neutral-900",
+                "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none",
+                isDark 
+                    ? "bg-black" 
+                    : "bg-gradient-to-br from-gray-50 to-blue-100",
             )}
         >
             <DigitalStreamBackground />
@@ -159,7 +161,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-6 font-headline font-extrabold text-2xl md:text-3xl uppercase tracking-[0.25em] ml-[0.25em]",
-                        "text-white"
+                        isDark ? "text-white" : "text-gray-800"
                     )}
                 >
                     PlayGate
@@ -172,7 +174,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-2 text-sm tracking-widest",
-                        "text-white/70"
+                        isDark ? "text-white/70" : "text-gray-600/80"
                     )}
                 >
                     Enter Your World of Play.
@@ -196,7 +198,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-2 text-xs italic",
-                        "text-white/50"
+                        isDark ? "text-white/50" : "text-gray-500/80"
                     )}
                  >
                     Developed by Waiz Marco
@@ -222,5 +224,3 @@ export function LoadingScreen({ progress }: { progress: number }) {
         </motion.div>
     );
 }
-
-    
