@@ -101,9 +101,9 @@ const Header = ({
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -50 }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className="absolute inset-0 p-4 flex flex-col md:flex-row items-center justify-between gap-4"
+                        className="absolute inset-0 p-4 flex items-center justify-between gap-4"
                     >
-                        <div className="flex items-center gap-2 self-start md:self-center">
+                        <div className="flex items-center gap-2">
                             <SidebarTrigger className="h-10 w-10 md:hidden" />
                             <h1 className="text-2xl font-bold">Video Library</h1>
                         </div>
@@ -345,5 +345,3 @@ export default function HomePage() {
     </>
   );
 }
-
-    
