@@ -33,6 +33,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
   const hasStartedFromSavedTime = useRef(false);
 
   useEffect(() => {
@@ -95,6 +96,55 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
       }
     };
   }, [params.id, toast]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      // Ignore shortcuts if user is typing in an input field
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          video.paused ? video.play() : video.pause();
+          break;
+        case 'arrowright':
+          video.currentTime += 5;
+          break;
+        case 'arrowleft':
+          video.currentTime -= 5;
+          break;
+        case 'arrowup':
+          e.preventDefault();
+          video.volume = Math.min(1, video.volume + 0.1);
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          video.volume = Math.max(0, video.volume - 0.1);
+          break;
+        case 'm':
+          video.muted = !video.muted;
+          break;
+        case 'f':
+          if (!document.fullscreenElement) {
+            playerContainerRef.current?.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -229,7 +279,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                 <DropdownMenuRadioGroup value={playbackRate} onValueChange={setPlaybackRate}>
                   <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="1">1x (Normal)</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="1.5">1.5x</0.5x</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="2">2x</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
@@ -243,7 +293,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
             )}
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center p-4 bg-black/90">
+      <main className="flex-1 flex items-center justify-center p-4 bg-black/90" ref={playerContainerRef}>
         <div className="w-full max-w-6xl aspect-video rounded-lg overflow-hidden shadow-2xl shadow-black/50">
           {videoUrl && (
             <video
@@ -260,3 +310,5 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
+
+    
