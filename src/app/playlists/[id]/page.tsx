@@ -5,10 +5,9 @@ import { notFound, useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Film, ListVideo, GripVertical } from "lucide-react";
+import { ArrowLeft, Film, GripVertical, Play } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { VideoGrid } from '@/components/video-grid';
 import Link from 'next/link';
 import { Reorder } from 'framer-motion';
 import { VideoCard } from '@/components/video-card';
@@ -97,25 +96,37 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
         }
     }
 
+    const handlePlayAll = () => {
+        if (playlist && videos.length > 0) {
+            router.push(`/player/${videos[0].id}?playlist=${playlist.id}`);
+        } else {
+            toast({
+                title: "Playlist is empty",
+                description: "Add videos to this playlist to play them.",
+                variant: "destructive"
+            });
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex flex-col h-full">
-                <header className="p-4 border-b">
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2 mt-2" />
+                <header className="flex items-center justify-between p-4 border-b">
+                    <div className="flex items-center gap-4">
+                         <Skeleton className="h-10 w-10" />
+                        <div>
+                            <Skeleton className="h-8 w-48" />
+                            <Skeleton className="h-4 w-64 mt-2" />
+                        </div>
+                    </div>
+                     <Skeleton className="h-10 w-28" />
                 </header>
                 <main className="flex-1 p-6">
-                    <VideoGrid>
-                        {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="flex flex-col space-y-3">
-                                <Skeleton className="h-[125px] w-full rounded-xl" />
-                                <div className="space-y-2">
-                                <Skeleton className="h-4 w-[200px]" />
-                                <Skeleton className="h-4 w-[150px]" />
-                                </div>
-                            </div>
+                   <div className="space-y-4 max-w-4xl mx-auto">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                           <Skeleton key={i} className="h-24 w-full rounded-lg" />
                         ))}
-                    </VideoGrid>
+                    </div>
                 </main>
             </div>
         );
@@ -128,14 +139,20 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
 
     return (
         <div className="flex flex-col h-full">
-            <header className="flex items-center gap-4 p-4 border-b">
-                <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')}>
-                    <ArrowLeft />
-                </Button>
-                <div>
-                    <h1 className="text-2xl font-bold">{playlist.name}</h1>
-                    <p className="text-muted-foreground">{playlist.description || 'Drag and drop videos to reorder'}</p>
+            <header className="flex items-center justify-between gap-4 p-4 border-b">
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')}>
+                        <ArrowLeft />
+                    </Button>
+                    <div>
+                        <h1 className="text-2xl font-bold">{playlist.name}</h1>
+                        <p className="text-muted-foreground">{playlist.description || 'Drag and drop videos to reorder'}</p>
+                    </div>
                 </div>
+                <Button onClick={handlePlayAll} disabled={videos.length === 0}>
+                    <Play className="mr-2 h-4 w-4" />
+                    Play All
+                </Button>
             </header>
             <main className="flex-1 p-6 overflow-y-auto">
                 {videos.length === 0 ? (
