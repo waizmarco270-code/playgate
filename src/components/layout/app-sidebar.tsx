@@ -11,10 +11,10 @@ import {
   SidebarMenuButton,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Logo } from '@/components/icons';
 import { Home, Settings, FolderKanban } from 'lucide-react';
 import Link from 'next/link';
 import { ThemeToggle } from '../theme-toggle';
+import Image from 'next/image';
 
 const AppSidebar = () => {
   const pathname = usePathname();
@@ -41,7 +41,7 @@ const AppSidebar = () => {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <Logo className="w-8 h-8 text-primary" />
+          <Image src="https://picsum.photos/seed/logo/32/32" alt="PlayGate Logo" width={32} height={32} className="rounded-md" />
           <div className="flex flex-col">
             <h2 className="text-lg font-semibold tracking-tight">PlayGate</h2>
             <p className="text-xs text-muted-foreground">Your Offline Video Universe</p>
