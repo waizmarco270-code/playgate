@@ -1,5 +1,4 @@
 
-
 'use client';
 import { generateVideoThumbnail, getVideoDuration } from './utils';
 import type { VideoFile, VideoFileHandle, StoredVideoFile } from './types';
@@ -177,6 +176,27 @@ class IndexedDBManager {
     });
   }
 
+  async updateVideoThumbnail(id: string, thumbnail: Blob): Promise<void> {
+    const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(VIDEO_STORE, 'readwrite');
+        const store = tx.objectStore(VIDEO_STORE);
+        const request = store.get(id);
+
+        request.onsuccess = () => {
+            const videoData = request.result;
+            if (videoData) {
+                videoData.thumbnail = thumbnail;
+                store.put(videoData);
+            } else {
+                reject("Video not found");
+            }
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+    });
+  }
+
   async deleteVideo(id: string): Promise<void> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
@@ -201,3 +221,5 @@ class IndexedDBManager {
 }
 
 export const db = new IndexedDBManager();
+
+    

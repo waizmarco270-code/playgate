@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { notFound, useRouter } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { VideoFile } from '@/lib/types';
-import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward } from 'lucide-react';
+import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDuration, formatBytes } from '@/lib/utils';
@@ -192,6 +192,41 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     }
   }
 
+  const handleSetThumbnail = useCallback(() => {
+    if (!videoRef.current || !videoMetadata) return;
+
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+      toast({ title: "Error", description: "Could not capture thumbnail.", variant: "destructive" });
+      return;
+    }
+
+    const aspectRatio = video.videoWidth / video.videoHeight;
+    const maxWidth = 320;
+    canvas.width = maxWidth;
+    canvas.height = maxWidth / aspectRatio;
+    
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob(async (blob) => {
+      if (blob && videoMetadata) {
+        try {
+          await db.updateVideoThumbnail(videoMetadata.id, blob);
+          toast({
+            title: "Thumbnail Updated",
+            description: "The new thumbnail has been saved.",
+          });
+        } catch (error) {
+          console.error("Failed to save thumbnail:", error);
+          toast({ title: "Error", description: "Failed to save thumbnail.", variant: "destructive" });
+        }
+      }
+    }, 'image/jpeg', 0.8);
+  }, [videoMetadata, toast]);
+
+
   const formattedDuration = useMemo(() => videoMetadata ? formatDuration(videoMetadata.duration) : 'N/A', [videoMetadata]);
   const formattedSize = useMemo(() => videoMetadata ? formatBytes(videoMetadata.size) : 'N/A', [videoMetadata]);
 
@@ -247,6 +282,11 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                 <SkipForward className="h-5 w-5" />
             </Button>
 
+            <Button variant="outline" size="icon" onClick={handleSetThumbnail}>
+              <Camera className="h-4 w-4" />
+              <span className="sr-only">Set as Thumbnail</span>
+            </Button>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -286,7 +326,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                 <DropdownMenuRadioGroup value={playbackRate} onValueChange={setPlaybackRate}>
                   <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="1">1x (Normal)</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="1.5">1.5x</0.5x</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="2">2x</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
@@ -310,6 +350,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
               autoPlay
               className="w-full h-full"
               onCanPlay={handleCanPlay}
+              crossOrigin="anonymous" 
             />
           )}
         </div>
@@ -317,3 +358,5 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
+
+    
