@@ -56,13 +56,16 @@ export function LoadingScreen({ progress }: { progress: number }) {
         >
             {/* Raining Icons Effect */}
             <div className="absolute inset-0 overflow-hidden">
-                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-1" />
-                <Clapperboard className="absolute h-6 w-6 text-primary/10 animate-rain-2" />
-                <Video className="absolute h-10 w-10 text-primary/10 animate-rain-3" />
-                <PlayCircle className="absolute h-8 w-8 text-primary/10 animate-rain-4" />
-                <SlidersHorizontal className="absolute h-6 w-6 text-primary/10 animate-rain-5" />
-                <Camera className="absolute h-7 w-7 text-primary/10 animate-rain-6" />
-                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-7" />
+                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-1" style={{left: '10%'}} />
+                <Clapperboard className="absolute h-6 w-6 text-primary/10 animate-rain-2" style={{left: '20%'}}/>
+                <Video className="absolute h-10 w-10 text-primary/10 animate-rain-3" style={{left: '30%'}}/>
+                <PlayCircle className="absolute h-8 w-8 text-primary/10 animate-rain-4" style={{left: '40%'}}/>
+                <SlidersHorizontal className="absolute h-6 w-6 text-primary/10 animate-rain-5" style={{left: '50%'}}/>
+                <Camera className="absolute h-7 w-7 text-primary/10 animate-rain-6" style={{left: '60%'}}/>
+                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-7" style={{left: '70%'}}/>
+                <Video className="absolute h-10 w-10 text-primary/10 animate-rain-1" style={{left: '80%', animationDelay: '1s'}}/>
+                <PlayCircle className="absolute h-8 w-8 text-primary/10 animate-rain-3" style={{left: '90%', animationDelay: '3s'}}/>
+                <Camera className="absolute h-7 w-7 text-primary/10 animate-rain-5" style={{left: '5%', animationDelay: '5s'}}/>
             </div>
 
             <div className="relative flex flex-col items-center justify-center text-center">
