@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { notFound, useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
-import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera } from 'lucide-react';
+import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera, AudioLines, Captions } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDuration, formatBytes } from '@/lib/utils';
@@ -33,6 +33,13 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(-1);
 
+  // States for audio and subtitle tracks
+  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
+  const [textTracks, setTextTracks] = useState<TextTrack[]>([]);
+  const [selectedAudioTrackId, setSelectedAudioTrackId] = useState<string>('');
+  const [selectedTextTrackId, setSelectedTextTrackId] = useState<string>('off');
+
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const playlistId = searchParams.get('playlist');
@@ -41,7 +48,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
   const hasStartedFromSavedTime = useRef(false);
-
+  
   const isPrevEnabled = playlist ? currentVideoIndex > 0 : false;
   const isNextEnabled = playlist ? currentVideoIndex < playlist.videoIds.length - 1 : false;
 
@@ -194,14 +201,53 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   }, [playbackRate]);
 
   const handleCanPlay = () => {
-    if (videoRef.current && videoMetadata?.currentTime && !hasStartedFromSavedTime.current) {
-      // Only seek if progress is not at the very beginning or end
+    const video = videoRef.current;
+    if (!video) return;
+    
+    // Seek to saved time
+    if (videoMetadata?.currentTime && !hasStartedFromSavedTime.current) {
       if (videoMetadata.currentTime > 1 && videoMetadata.currentTime < videoMetadata.duration - 1) {
-        videoRef.current.currentTime = videoMetadata.currentTime;
+        video.currentTime = videoMetadata.currentTime;
       }
       hasStartedFromSavedTime.current = true;
     }
+    
+    // Setup audio and text tracks
+    const audioTrackList = Array.from(video.audioTracks);
+    setAudioTracks(audioTrackList);
+    const enabledAudioTrack = audioTrackList.find(t => t.enabled);
+    if(enabledAudioTrack) setSelectedAudioTrackId(enabledAudioTrack.id);
+
+    const textTrackList = Array.from(video.textTracks);
+    setTextTracks(textTrackList);
+    const visibleTextTrack = textTrackList.find(t => t.mode === 'showing');
+    if (visibleTextTrack) {
+        setSelectedTextTrackId(visibleTextTrack.id);
+    } else {
+        setSelectedTextTrackId('off');
+    }
   };
+  
+  // Handlers for changing tracks
+  const handleAudioTrackChange = (trackId: string) => {
+    if(!videoRef.current) return;
+    videoRef.current.audioTracks.forEach(track => {
+      track.enabled = track.id === trackId;
+    });
+    setSelectedAudioTrackId(trackId);
+  }
+
+  const handleTextTrackChange = (trackId: string) => {
+    if(!videoRef.current) return;
+    videoRef.current.textTracks.forEach(track => {
+        if (trackId === 'off') {
+             track.mode = 'disabled';
+        } else {
+            track.mode = track.id === trackId ? 'showing' : 'hidden';
+        }
+    });
+    setSelectedTextTrackId(trackId);
+  }
 
   useInterval(
     async () => {
@@ -361,6 +407,42 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
                 </div>
               </PopoverContent>
             </Popover>
+            
+            {audioTracks.length > 1 && (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" title="Audio Tracks">
+                           <AudioLines className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuRadioGroup value={selectedAudioTrackId} onValueChange={handleAudioTrackChange}>
+                          {audioTracks.map(track => (
+                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
+
+            {textTracks.length > 0 && (
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" title="Subtitles">
+                           <Captions className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        <DropdownMenuRadioGroup value={selectedTextTrackId} onValueChange={handleTextTrackChange}>
+                           <DropdownMenuRadioItem value="off">Off</DropdownMenuRadioItem>
+                           {textTracks.map(track => (
+                             <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
+                          ))}
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )}
+
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -405,3 +487,5 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
+
+    
