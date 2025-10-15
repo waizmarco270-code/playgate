@@ -108,6 +108,30 @@ export default {
         'gradient-shift': {
           '0%, 100%': { 'background-position': '0% 50%' },
           '50%': { 'background-position': '100% 50%' },
+        },
+        'fade-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'fade-in-out': {
+          '0%, 100%': { opacity: '0' },
+          '50%': { opacity: '1' },
+        },
+        'draw-line-h': {
+          '0%': { transform: 'scaleX(0)', transformOrigin: 'left' },
+          '40%': { transform: 'scaleX(1)', transformOrigin: 'left' },
+          '60%': { transform: 'scaleX(1)', transformOrigin: 'right' },
+          '100%': { transform: 'scaleX(0)', transformOrigin: 'right' },
+        },
+        'draw-line-v': {
+          '0%': { transform: 'scaleY(0)', transformOrigin: 'top' },
+          '40%': { transform: 'scaleY(1)', transformOrigin: 'top' },
+          '60%': { transform: 'scaleY(1)', transformOrigin: 'bottom' },
+          '100%': { transform: 'scaleY(0)', transformOrigin: 'bottom' },
+        },
+        'spin-slow': {
+          from: { transform: 'rotate(0deg)' },
+          to: { transform: 'rotate(360deg)' },
         }
       },
       animation: {
@@ -117,6 +141,11 @@ export default {
         shimmer: 'shimmer 3s linear infinite',
         'rain-stream': 'rain-stream linear infinite',
         'gradient-shift': 'gradient-shift 15s ease infinite',
+        'fade-in': 'fade-in 1s ease-out forwards',
+        'fade-in-out': 'fade-in-out 3s ease-in-out infinite',
+        'draw-line-h': 'draw-line-h 3s ease-in-out infinite',
+        'draw-line-v': 'draw-line-v 3s ease-in-out infinite',
+        'spin-slow': 'spin-slow 10s linear infinite',
       },
     },
   },

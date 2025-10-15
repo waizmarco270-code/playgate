@@ -41,6 +41,35 @@ const DigitalStreamBackground = React.memo(() => {
 });
 DigitalStreamBackground.displayName = 'DigitalStreamBackground';
 
+const BlueprintGrid = React.memo(() => {
+    return (
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+            <div className="relative w-48 h-48 md:w-64 md:h-64">
+                {/* Main Grid */}
+                <div className="w-full h-full absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--primary)/0.1)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary)/0.1)_1px,transparent_1px)] bg-[size:1rem_1rem] animate-fade-in opacity-0"></div>
+                
+                {/* Scanner Lines */}
+                <div className="absolute inset-0 w-full h-full overflow-hidden">
+                    <div className="absolute top-0 left-0 h-[2px] w-full bg-gradient-to-r from-transparent via-primary to-transparent animate-draw-line-h"></div>
+                    <div className="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-transparent via-primary to-transparent animate-draw-line-v"></div>
+                </div>
+
+                {/* Corner Brackets */}
+                <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2 border-primary animate-spin-slow"></div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 border-t-2 border-r-2 border-primary animate-spin-slow" style={{animationDelay: '0.2s'}}></div>
+                <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-2 border-l-2 border-primary animate-spin-slow" style={{animationDelay: '0.3s'}}></div>
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2 border-primary animate-spin-slow" style={{animationDelay: '0.1s'}}></div>
+                
+                {/* Annotations */}
+                <span className="absolute -top-4 left-0 text-primary/50 text-xs font-mono animate-fade-in-out opacity-0" style={{animationDelay: '0.5s'}}>w:128px</span>
+                <span className="absolute -right-12 top-0 text-primary/50 text-xs font-mono animate-fade-in-out opacity-0" style={{animationDelay: '0.8s'}}>h:128px</span>
+                 <span className="absolute -bottom-4 right-0 text-primary/50 text-xs font-mono animate-fade-in-out opacity-0" style={{animationDelay: '1.2s'}}>r:8px</span>
+            </div>
+        </div>
+    )
+})
+BlueprintGrid.displayName = 'BlueprintGrid'
+
 
 export function LoadingScreen({ progress }: { progress: number }) {
     const { resolvedTheme } = useTheme();
@@ -59,7 +88,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
             opacity: 1,
             transition: {
                 scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
-                opacity: { duration: 0.5, ease: 'easeIn' }
+                opacity: { duration: 0.5, ease: 'easeIn', delay: 1.5 } // Delay fade in
             }
         },
     };
@@ -94,7 +123,10 @@ export function LoadingScreen({ progress }: { progress: number }) {
             {/* Digital Stream Effect */}
             <DigitalStreamBackground />
 
-            <div className="relative z-10 flex flex-col items-center justify-center text-center p-4 rounded-full bg-background/80 backdrop-blur-sm">
+            {/* Blueprint Grid */}
+            <BlueprintGrid />
+
+            <div className="relative z-20 flex flex-col items-center justify-center text-center p-4 rounded-full bg-background/80 backdrop-blur-sm">
                 {/* Logo with Glow */}
                 <motion.div
                     className="relative w-24 h-24 md:w-32 md:h-32"
