@@ -35,7 +35,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className={cn('font-body antialiased')}>
-        <ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
           <LoadingScreenProvider>
             <VaultProvider>
               <SidebarProvider>
