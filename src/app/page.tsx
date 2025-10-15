@@ -11,6 +11,14 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AddToPlaylistDialog } from '@/components/add-to-playlist-dialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical } from 'lucide-react';
 
 export default function HomePage() {
   const [videos, setVideos] = useState<VideoFile[]>([]);
@@ -18,6 +26,7 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
@@ -149,10 +158,10 @@ export default function HomePage() {
     }
 
     return (
-        <div className="flex items-center justify-between p-4 border-b w-full">
-            <h1 className="text-2xl font-bold">Video Library</h1>
-            <div className="flex items-center gap-2">
-                <div className="relative w-64">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-b w-full">
+            <h1 className="text-2xl font-bold self-start md:self-center">Video Library</h1>
+            <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                     type="search"
@@ -162,12 +171,32 @@ export default function HomePage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button variant="outline" onClick={toggleSelectionMode}>
-                    <CheckSquare className="mr-2 h-4 w-4" /> Select
-                </Button>
-                <Button onClick={handleImportClick}>
-                    <Plus className="mr-2 h-4 w-4" /> Import Video
-                </Button>
+                {isMobile ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <MoreVertical />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onSelect={toggleSelectionMode}>
+                          <CheckSquare className="mr-2 h-4 w-4" /> Select
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={handleImportClick}>
+                           <Plus className="mr-2 h-4 w-4" /> Import Video
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <>
+                    <Button variant="outline" onClick={toggleSelectionMode}>
+                        <CheckSquare className="mr-2 h-4 w-4" /> Select
+                    </Button>
+                    <Button onClick={handleImportClick}>
+                        <Plus className="mr-2 h-4 w-4" /> Import Video
+                    </Button>
+                  </>
+                )}
                  <input
                     type="file"
                     ref={fileInputRef}
@@ -201,7 +230,7 @@ export default function HomePage() {
             ))}
           </VideoGrid>
         ) : videos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="flex flex-col items-center justify-center h-full text-center p-4">
             <div className="p-6 rounded-full bg-secondary mb-4">
               <Film className="w-12 h-12 text-muted-foreground" />
             </div>
@@ -212,12 +241,12 @@ export default function HomePage() {
             </Button>
           </div>
         ) : filteredVideos.length === 0 && searchTerm ? (
-           <div className="flex flex-col items-center justify-center h-full text-center">
+           <div className="flex flex-col items-center justify-center h-full text-center p-4">
             <div className="p-6 rounded-full bg-secondary mb-4">
               <Search className="w-12 h-12 text-muted-foreground" />
             </div>
             <h2 className="text-2xl font-semibold">No Results Found</h2>
-            <p className="mt-2 text-muted-foreground">No videos match your search term "{searchTerm}".</p>
+            <p className="mt-2 text-muted-foreground text-center">No videos match your search term "{searchTerm}".</p>
           </div>
         ) : (
           <VideoGrid>
@@ -244,5 +273,3 @@ export default function HomePage() {
     </>
   );
 }
-
-    

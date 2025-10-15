@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { notFound, useRouter, useSearchParams, useParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
-import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera, AudioLines, Captions } from 'lucide-react';
+import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera, AudioLines, Captions, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDuration, formatBytes } from '@/lib/utils';
@@ -16,6 +16,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
+  DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import {
   Popover,
@@ -23,6 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { useInterval } from 'usehooks-ts';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function PlayerPage() {
   const params = useParams<{ id: string }>();
@@ -44,6 +46,7 @@ export default function PlayerPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const playlistId = searchParams.get('playlist');
+  const isMobile = useIsMobile();
 
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -218,7 +221,7 @@ export default function PlayerPage() {
     }
     
     // Setup audio and text tracks
-    if (video.audioTracks && video.audioTracks.length > 0) {
+    if (video.audioTracks && video.audioTracks.length > 1) {
       const audioTrackList = Array.from(video.audioTracks);
       setAudioTracks(audioTrackList);
       const enabledAudioTrack = audioTrackList.find(t => t.enabled);
@@ -366,65 +369,124 @@ export default function PlayerPage() {
   if (!videoMetadata) {
     return null; // notFound() would have been called
   }
-
-  return (
-    <div className="flex flex-col h-full bg-background text-foreground">
-      <header className="p-4 flex items-center gap-2 border-b shrink-0">
-        <Button variant="ghost" size="icon" onClick={() => router.back()}>
-          <ArrowLeft />
+  
+  const DesktopControls = () => (
+     <div className="hidden md:flex items-center gap-1.5">
+        <Button variant="outline" size="icon" onClick={handleSetThumbnail} title="Set current frame as thumbnail">
+          <Camera className="h-4 w-4" />
+          <span className="sr-only">Set as Thumbnail</span>
         </Button>
-        <div className="flex-1 overflow-hidden">
-            <h1 className="text-xl font-bold truncate" title={videoMetadata.name}>{videoMetadata.name}</h1>
-            <p className="text-sm text-muted-foreground">{playlist ? `${playlist.name} (${currentVideoIndex + 1} / ${playlist.videoIds.length})` : `Added on ${new Date(videoMetadata.createdAt).toLocaleDateString()}`}</p>
-        </div>
-        <div className="flex items-center gap-1.5">
-            <Button variant="ghost" size="icon" onClick={handlePrev} disabled={!isPrevEnabled} title="Previous (p)">
-                <SkipBack className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleNext} disabled={!isNextEnabled} title="Next (n)">
-                <SkipForward className="h-5 w-5" />
-            </Button>
 
-            <Button variant="outline" size="icon" onClick={handleSetThumbnail} title="Set current frame as thumbnail">
-              <Camera className="h-4 w-4" />
-              <span className="sr-only">Set as Thumbnail</span>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" title="Video Info">
+              <Info className="h-4 w-4" />
+              <span className="sr-only">Video Info</span>
             </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80">
+            <div className="grid gap-4">
+              <h3 className="font-medium leading-none">Video Details</h3>
+              <div className="flex items-center">
+                <FileVideo className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground flex-1">Type</span>
+                <span className="text-sm font-mono">{videoMetadata.type}</span>
+              </div>
+              <div className="flex items-center">
+                <Gauge className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground flex-1">Size</span>
+                <span className="text-sm font-mono">{formattedSize}</span>
+              </div>
+                <div className="flex items-center">
+                <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground flex-1">Duration</span>
+                <span className="text-sm font-mono">{formattedDuration}</span>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+        
+        {audioTracks.length > 0 && (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" title="Audio Tracks">
+                        <AudioLines className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuRadioGroup value={selectedAudioTrackId} onValueChange={handleAudioTrackChange}>
+                      {audioTracks.map(track => (
+                          <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )}
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" title="Video Info">
-                  <Info className="h-4 w-4" />
-                  <span className="sr-only">Video Info</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80">
-                <div className="grid gap-4">
-                  <h3 className="font-medium leading-none">Video Details</h3>
-                  <div className="flex items-center">
-                    <FileVideo className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground flex-1">Type</span>
-                    <span className="text-sm font-mono">{videoMetadata.type}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Gauge className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground flex-1">Size</span>
-                    <span className="text-sm font-mono">{formattedSize}</span>
-                  </div>
-                   <div className="flex items-center">
-                    <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground flex-1">Duration</span>
-                    <span className="text-sm font-mono">{formattedDuration}</span>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-            
-            {audioTracks.length > 1 && (
-                <DropdownMenu>
+        {textTracks.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" title="Subtitles">
+                        <Captions className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuRadioGroup value={selectedTextTrackId} onValueChange={handleTextTrackChange}>
+                        <DropdownMenuRadioItem value="off">Off</DropdownMenuRadioItem>
+                        {textTracks.map(track => (
+                          <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )}
+
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="w-24" title="Playback speed">
+              <Gauge className="mr-2 h-4 w-4" /> {playbackRate}x
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuRadioGroup value={playbackRate} onValueChange={setPlaybackRate}>
+              <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="1">1x (Normal)</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="2">2x</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {document.pictureInPictureEnabled && (
+            <Button variant="outline" size="icon" onClick={handleTogglePiP} title="Picture-in-Picture">
+                <PictureInPicture className="h-4 w-4" />
+                <span className="sr-only">Toggle Picture-in-Picture</span>
+            </Button>
+        )}
+    </div>
+  );
+
+  const MobileControls = () => (
+    <div className="flex md:hidden">
+       <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+             <DropdownMenuItem onSelect={handleTogglePiP} disabled={!document.pictureInPictureEnabled}>
+                <PictureInPicture className="mr-2 h-4 w-4" />
+                <span>PiP</span>
+             </DropdownMenuItem>
+             {audioTracks.length > 0 && <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" title="Audio Tracks">
-                           <AudioLines className="h-4 w-4" />
-                        </Button>
+                       <div className="flex items-center w-full">
+                           <AudioLines className="mr-2 h-4 w-4" />
+                            <span>Audio</span>
+                        </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                         <DropdownMenuRadioGroup value={selectedAudioTrackId} onValueChange={handleAudioTrackChange}>
@@ -434,14 +496,14 @@ export default function PlayerPage() {
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )}
-
-            {textTracks.length > 0 && (
+             </DropdownMenuItem>}
+             {textTracks.length > 0 && <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                  <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" title="Subtitles">
-                           <Captions className="h-4 w-4" />
-                        </Button>
+                       <div className="flex items-center w-full">
+                           <Captions className="mr-2 h-4 w-4" />
+                            <span>Subtitles</span>
+                        </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
                         <DropdownMenuRadioGroup value={selectedTextTrackId} onValueChange={handleTextTrackChange}>
@@ -452,35 +514,34 @@ export default function PlayerPage() {
                         </DropdownMenuRadioGroup>
                     </DropdownMenuContent>
                 </DropdownMenu>
-            )}
+             </DropdownMenuItem>}
+          </DropdownMenuContent>
+        </DropdownMenu>
+    </div>
+  )
 
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-24" title="Playback speed">
-                  <Gauge className="mr-2 h-4 w-4" /> {playbackRate}x
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuRadioGroup value={playbackRate} onValueChange={setPlaybackRate}>
-                  <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="1">1x (Normal)</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="2">2x</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {document.pictureInPictureEnabled && (
-                <Button variant="outline" size="icon" onClick={handleTogglePiP} title="Picture-in-Picture">
-                    <PictureInPicture className="h-4 w-4" />
-                    <span className="sr-only">Toggle Picture-in-Picture</span>
-                </Button>
-            )}
+  return (
+    <div className="flex flex-col h-full bg-background text-foreground">
+      <header className="p-2 md:p-4 flex items-center gap-2 border-b shrink-0">
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <ArrowLeft />
+        </Button>
+        <div className="flex-1 overflow-hidden">
+            <h1 className="text-lg md:text-xl font-bold truncate" title={videoMetadata.name}>{videoMetadata.name}</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">{playlist ? `${playlist.name} (${currentVideoIndex + 1} / ${playlist.videoIds.length})` : `Added on ${new Date(videoMetadata.createdAt).toLocaleDateString()}`}</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+            <Button variant="ghost" size="icon" onClick={handlePrev} disabled={!isPrevEnabled} title="Previous (p)">
+                <SkipBack className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleNext} disabled={!isNextEnabled} title="Next (n)">
+                <SkipForward className="h-5 w-5" />
+            </Button>
+            {isMobile ? <MobileControls /> : <DesktopControls />}
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center p-4 bg-black/90" ref={playerContainerRef}>
-        <div className="w-full max-w-6xl aspect-video rounded-lg overflow-hidden shadow-2xl shadow-black/50">
+      <main className="flex-1 flex items-center justify-center p-0 md:p-4 bg-black/90" ref={playerContainerRef}>
+        <div className="w-full h-full max-w-6xl md:aspect-video md:rounded-lg overflow-hidden shadow-2xl shadow-black/50">
           {videoUrl && (
             <video
               ref={videoRef}
