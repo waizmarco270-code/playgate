@@ -43,7 +43,7 @@ const AppSidebar = () => {
         <div className="flex items-center gap-2">
           <Logo className="w-8 h-8 text-primary" />
           <div className="flex flex-col">
-            <h2 className="text-lg font-semibold tracking-tight">WaizPlay</h2>
+            <h2 className="text-lg font-semibold tracking-tight">PlayGate</h2>
             <p className="text-xs text-muted-foreground">Your Offline Video Universe</p>
           </div>
         </div>

@@ -1,3 +1,4 @@
+
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/providers/theme-provider';
@@ -8,7 +9,7 @@ import { cn } from '@/lib/utils';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  title: 'WaizPlay - Your Offline Video Universe',
+  title: 'PlayGate - Your Offline Video Universe',
   description: 'A professional, modern PWA video player that allows users to import, organize, and play locally stored videos completely offline.',
   manifest: '/manifest.json',
 };

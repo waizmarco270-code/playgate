@@ -1,3 +1,4 @@
+
 'use client';
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
@@ -26,7 +27,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
-  storageKey = 'waizplay-theme',
+  storageKey = 'playgate-theme',
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
