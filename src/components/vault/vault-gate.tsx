@@ -6,8 +6,9 @@ import { useVault } from "../providers/vault-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldAlert, ShieldCheck } from "lucide-react";
+import { ShieldAlert, ShieldCheck, Mail } from "lucide-react";
 import { Label } from "../ui/label";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function VaultGate() {
     const { isPasswordSet, setPassword, unlock } = useVault();
@@ -32,7 +33,7 @@ export function VaultGate() {
     const handleUnlock = async () => {
         const success = await unlock(password);
         if (!success) {
-            setError("Incorrect password.");
+            setError("Incorrect password. Please try again.");
         } else {
             setError('');
         }
@@ -46,6 +47,12 @@ export function VaultGate() {
             handleUnlock();
         }
     }
+    
+    const handleContactDeveloper = () => {
+        const subject = "PlayGate Vault Password Reset Request";
+        const body = "I have forgotten my PlayGate vault password and would like to request assistance with resetting it. Please let me know the next steps.";
+        window.location.href = `mailto:waizmonazzum270@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
 
     if (isSettingUp) {
         return (
@@ -55,8 +62,8 @@ export function VaultGate() {
                         <div className="mx-auto bg-primary/10 p-3 rounded-full mb-2">
                            <ShieldCheck className="h-8 w-8 text-primary" />
                         </div>
-                        <CardTitle>Set Up Your Vault</CardTitle>
-                        <CardDescription>Create a password to secure your private videos. This password cannot be recovered, so store it safely.</CardDescription>
+                        <CardTitle>Set Up Your Secure Vault</CardTitle>
+                        <CardDescription>Create a password for your private video vault. This will encrypt your data.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,10 +88,25 @@ export function VaultGate() {
                                 />
                             </div>
                             {error && <p className="text-sm text-destructive">{error}</p>}
+                            
+                            <AnimatePresence>
+                                {password.length > 0 && confirmPassword.length > 0 && (
+                                     <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="!mt-6 p-4 rounded-lg border border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                                    >
+                                        <h4 className="font-bold mb-2 text-sm">⚠️ Important Security Notice</h4>
+                                        <p className="text-xs leading-relaxed">This password is the ONLY key to your vault. It is **not** stored on any server and **cannot be recovered** if you forget it. Please store it in a safe, private place like a password manager.</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                         </form>
                     </CardContent>
                     <CardFooter>
-                        <Button className="w-full" onClick={handleSetPassword}>Set Password & Enter Vault</Button>
+                        <Button className="w-full" onClick={handleSetPassword}>Set Password & Secure Vault</Button>
                     </CardFooter>
                 </Card>
             </div>
@@ -110,7 +132,7 @@ export function VaultGate() {
                                 id="password"
                                 type="password" 
                                 value={password} 
-                                onChange={(e) => setPasswordInput(e.target.value)} 
+                                onChange={(e) => { setPasswordInput(e.target.value); setError(''); }}
                                 placeholder="Enter your vault password"
                             />
                         </div>
@@ -119,7 +141,9 @@ export function VaultGate() {
                 </CardContent>
                 <CardFooter className="flex-col gap-4">
                     <Button className="w-full" onClick={handleUnlock}>Unlock</Button>
-                    <Button variant="link" size="sm" onClick={() => setIsSettingUp(true)}>Forgot password? Reset Vault</Button>
+                    <Button variant="link" size="sm" className="text-muted-foreground" onClick={handleContactDeveloper}>
+                       <Mail className="mr-2 h-4 w-4"/> Having Trouble? Contact Developer
+                    </Button>
                 </CardFooter>
             </Card>
         </div>
