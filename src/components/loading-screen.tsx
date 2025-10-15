@@ -5,30 +5,35 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
 import React from 'react';
+import { Camera, Clapperboard, Film, Headphones, Mic, Play, Repeat, Video } from 'lucide-react';
+
+const ICONS = [Camera, Clapperboard, Film, Headphones, Mic, Play, Repeat, Video];
 
 const DigitalStreamBackground = React.memo(() => {
-    const columns = Array.from({ length: 50 }).map((_, i) => i);
-    const characters = '01';
+    const columns = Array.from({ length: 40 }).map((_, i) => i);
 
-    const randomChar = () => characters.charAt(Math.floor(Math.random() * characters.length));
-    const randomString = (length: number) => Array.from({ length }).map(randomChar).join('');
+    const randomIcon = () => {
+        const Icon = ICONS[Math.floor(Math.random() * ICONS.length)];
+        return <Icon key={Math.random()} className="h-4 w-4 shrink-0" />;
+    };
+    
+    const randomIconColumn = (count: number) => Array.from({ length: count }).map(randomIcon);
 
     return (
          <div className="absolute inset-0 overflow-hidden z-0">
             {columns.map(i => (
                 <div 
                     key={`col-${i}`} 
-                    className="absolute top-0 h-full text-primary/40 font-mono text-xs md:text-sm animate-digital-rain"
+                    className="absolute top-0 h-full text-primary/10 animate-rain-stream"
                     style={{
-                        left: `${i * 2}%`,
-                        writingMode: 'vertical-rl',
-                        textOrientation: 'upright',
-                        animationDuration: `${Math.random() * 10 + 10}s`,
-                        animationDelay: `${Math.random() * -20}s`,
-                        transform: `translateY(-100vh) scale(0.8, 1)`,
+                        left: `${i * 2.5}%`,
+                        animationDuration: `${Math.random() * 20 + 15}s`,
+                        animationDelay: `${Math.random() * -35}s`,
                     }}
                 >
-                   {randomString(100)}
+                   <div className="flex flex-col gap-4">
+                     {randomIconColumn(30)}
+                   </div>
                 </div>
             ))}
         </div>
@@ -82,7 +87,8 @@ export function LoadingScreen({ progress }: { progress: number }) {
             exit="exit"
             className={cn(
                 "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none",
-                isDark ? "bg-black" : "bg-white"
+                isDark ? "bg-black" : "bg-white",
+                "bg-gradient-to-br from-background via-background to-primary/5 animate-gradient-shift"
             )}
         >
             {/* Digital Stream Effect */}
