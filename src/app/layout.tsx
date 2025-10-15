@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import Script from 'next/script';
 import BottomNav from '@/components/layout/bottom-nav';
 import { VaultProvider } from '@/components/providers/vault-provider';
+import { LoadingScreenProvider } from '@/components/providers/loading-screen-provider';
 
 export const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
@@ -35,6 +36,7 @@ export default function RootLayout({
       </head>
       <body className={cn('font-body antialiased')}>
         <ThemeProvider>
+          <LoadingScreenProvider>
             <VaultProvider>
               <SidebarProvider>
                 <div className="flex min-h-screen">
@@ -46,13 +48,14 @@ export default function RootLayout({
                 <BottomNav />
               </SidebarProvider>
             </VaultProvider>
-            <Toaster />
+          </LoadingScreenProvider>
+          <Toaster />
         </ThemeProvider>
         <Script id="service-worker-registration">
           {`
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', () => {
-                navigator.service-worker.register('/sw.js').then(registration => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
                   console.log('SW registered: ', registration);
                 }).catch(registrationError => {
                   console.log('SW registration failed: ', registrationError);
