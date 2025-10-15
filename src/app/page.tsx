@@ -225,50 +225,65 @@ export default function HomePage() {
     }
   }, [toast]);
 
-  useEffect(() => {
-    setLoading(true);
-    loadVideos();
-  }, [loadVideos]);
-
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) {
       return;
     }
+    await handleFiles(Array.from(files));
+  };
+  
+  const handleFiles = async (files: File[]) => {
+      setLoading(true);
+      try {
+        toast({
+          title: 'Importing...',
+          description: `Processing ${files.length} video(s). This may take a moment.`,
+        });
 
-    setLoading(true);
-    try {
-      toast({
-        title: 'Importing...',
-        description: `Processing ${files.length} video(s). This may take a moment.`,
-      });
-
-      for (const file of Array.from(files)) {
-        await db.addVideo(file, null);
-      }
-
-      toast({
-        title: 'Success',
-        description: `${files.length} video(s) imported successfully.`,
-      });
-      loadVideos(); // Reload all videos
-    } catch (error) {
-      console.error('Failed to import videos:', error);
-      toast({
-        title: 'Import Failed',
-        description: 'Could not import videos. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-        if(fileInputRef.current) {
-            fileInputRef.current.value = '';
+        for (const file of files) {
+          await db.addVideo(file, null);
         }
-        setLoading(false);
+
+        toast({
+          title: 'Success',
+          description: `${files.length} video(s) imported successfully.`,
+        });
+        await loadVideos();
+      } catch (error) {
+        console.error('Failed to import videos:', error);
+        toast({
+          title: 'Import Failed',
+          description: 'Could not import videos. Please try again.',
+          variant: 'destructive',
+        });
+      } finally {
+          if(fileInputRef.current) {
+              fileInputRef.current.value = '';
+          }
+          setLoading(false);
+      }
+  }
+
+
+  useEffect(() => {
+    setLoading(true);
+    loadVideos();
+
+    if ('launchQueue' in window && 'files' in (window as any).launchQueue) {
+      (window as any).launchQueue.setConsumer(async (launchParams: { files: any[] }) => {
+        if (!launchParams.files || launchParams.files.length === 0) {
+          return;
+        }
+        const files = await Promise.all(launchParams.files.map((handle: any) => handle.getFile()));
+        await handleFiles(files);
+      });
     }
+
+  }, [loadVideos]);
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
   };
 
   const onVideoDeletedOrUpdated = () => {
