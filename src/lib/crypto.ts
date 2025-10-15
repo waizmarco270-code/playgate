@@ -1,4 +1,5 @@
 
+
 'use client';
 
 // This file uses the Web Crypto API, which is only available in the browser.
@@ -97,6 +98,50 @@ export async function decrypt(encryptedData: string, key: CryptoKey): Promise<st
     );
 
     return new TextDecoder().decode(decrypted);
+}
+
+// --- Password Reset Challenge ---
+
+export async function generateSupportCode(): Promise<string> {
+    const randomBytes = window.crypto.getRandomValues(new Uint8Array(16));
+    return toHex(randomBytes);
+}
+
+export async function verifyUnlockKey(supportCode: string, unlockKey: string): Promise<boolean> {
+    try {
+        const masterSecret = "SECRET_MASTER_KEY_WAIZDEV_786"; // This is a placeholder
+        const encoder = new TextEncoder();
+        const keyMaterial = await window.crypto.subtle.importKey(
+            'raw',
+            encoder.encode(masterSecret),
+            { name: 'PBKDF2' },
+            false,
+            ['deriveKey']
+        );
+        const derivedKey = await window.crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                salt: encoder.encode(supportCode), // Use support code as salt
+                iterations: 1000,
+                hash: 'SHA-256',
+            },
+            keyMaterial,
+            { name: 'HMAC', hash: 'SHA-256', length: 256 },
+            true,
+            ['sign', 'verify']
+        );
+
+        const signature = await window.crypto.subtle.sign(
+            'HMAC',
+            derivedKey,
+            encoder.encode(supportCode + "_unlock")
+        );
+        
+        const expectedKey = toHex(new Uint8Array(signature)).substring(0, 12).toUpperCase();
+        return unlockKey.toUpperCase() === expectedKey;
+    } catch {
+        return false;
+    }
 }
 
 
