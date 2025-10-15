@@ -10,6 +10,9 @@ export default {
   ],
   theme: {
     extend: {
+      animationDuration: {
+        '10s': '10s',
+      },
       fontFamily: {
         body: ['Poppins', 'sans-serif'],
         headline: ['Poppins', 'sans-serif'],
@@ -184,13 +187,13 @@ export default {
         'spin-slow': 'spin-slow 10s linear infinite',
         'spin-slow-reverse': 'spin-slow-reverse 15s linear infinite',
         'gradient-shift': 'gradient-shift 15s ease infinite',
-        'rain-1': 'rain-1 12s linear infinite',
-        'rain-2': 'rain-2 13s linear infinite',
-        'rain-3': 'rain-3 14s linear infinite',
-        'rain-4': 'rain-4 12.5s linear infinite',
-        'rain-5': 'rain-5 13.5s linear infinite',
-        'rain-6': 'rain-6 14.5s linear infinite',
-        'rain-7': 'rain-7 12s linear infinite',
+        'rain-1': 'rain-1',
+        'rain-2': 'rain-2',
+        'rain-3': 'rain-3',
+        'rain-4': 'rain-4',
+        'rain-5': 'rain-5',
+        'rain-6': 'rain-6',
+        'rain-7': 'rain-7',
         'draw-line-h': 'draw-line-h 2.5s ease-in-out infinite',
         'draw-line-v': 'draw-line-v 2.5s ease-in-out infinite',
       },

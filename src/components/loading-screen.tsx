@@ -35,7 +35,7 @@ const DigitalStreamBackground = () => {
   return (
     <div className="absolute inset-0 z-0 overflow-hidden">
       {icons.map((item, index) => (
-        <item.Icon key={index} className={cn('absolute -top-1/4 text-primary/10', item.style)} />
+        <item.Icon key={index} className={cn('absolute -top-1/4 text-primary/10 duration-[10s] infinite linear', item.style)} />
       ))}
     </div>
   );
