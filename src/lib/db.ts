@@ -4,7 +4,7 @@ import { generateVideoThumbnail, getVideoDuration } from './utils';
 import type { VideoFile, VideoFileHandle, StoredVideoFile, Playlist } from './types';
 
 const DB_NAME = 'WaizPlayDB';
-const DB_VERSION = 3; // Incremented version due to schema change for playlists
+const DB_VERSION = 4; // Incremented version for vault feature
 const VIDEO_STORE = 'videos';
 const FILE_HANDLE_STORE = 'fileHandles';
 const PLAYLIST_STORE = 'playlists';
@@ -71,9 +71,17 @@ class IndexedDBManager {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
+        let videoStore;
         if (!db.objectStoreNames.contains(VIDEO_STORE)) {
-          db.createObjectStore(VIDEO_STORE, { keyPath: 'id' });
+          videoStore = db.createObjectStore(VIDEO_STORE, { keyPath: 'id' });
+        } else {
+            videoStore = (event.target as any).transaction.objectStore(VIDEO_STORE);
         }
+        
+        if (!videoStore.indexNames.contains('isVaulted')) {
+            videoStore.createIndex('isVaulted', 'isVaulted', { unique: false });
+        }
+
         if (!db.objectStoreNames.contains(FILE_HANDLE_STORE)) {
           db.createObjectStore(FILE_HANDLE_STORE, { keyPath: 'id' });
         }
@@ -115,6 +123,7 @@ class IndexedDBManager {
           video: file, // Store the file blob itself
           currentTime: 0,
           progress: 0,
+          isVaulted: false,
         };
         
         const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
@@ -136,15 +145,18 @@ class IndexedDBManager {
     });
   }
 
-  async getAllVideos(): Promise<VideoFile[]> {
+  async getAllVideos(includeVaulted = false): Promise<VideoFile[]> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction(VIDEO_STORE, 'readonly');
       const store = tx.objectStore(VIDEO_STORE);
       const request = store.getAll();
       request.onsuccess = () => {
-        // We don't need the `video` blob for the grid view, so we can remove it to save memory
-        const videos = (request.result as StoredVideoFile[]).map(({ video, ...rest }) => rest).sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
+        let videos = (request.result as StoredVideoFile[]).map(({ video, ...rest }) => rest);
+        if (!includeVaulted) {
+            videos = videos.filter(v => !v.isVaulted);
+        }
+        videos.sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime());
         resolve(videos);
       }
       request.onerror = () => reject(request.error);
@@ -292,6 +304,28 @@ class IndexedDBManager {
             }
         };
         tx.oncomplete = () => {};
+        tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async toggleVaultStatus(id: string, isVaulted: boolean): Promise<VideoFile> {
+     const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(VIDEO_STORE, 'readwrite');
+        const store = tx.objectStore(VIDEO_STORE);
+        const request = store.get(id);
+
+        request.onsuccess = () => {
+            const videoData = request.result;
+            if (videoData) {
+                videoData.isVaulted = isVaulted;
+                store.put(videoData);
+                const { video, ...rest } = videoData;
+                resolve(rest);
+            } else {
+                reject("Video not found");
+            }
+        };
         tx.onerror = () => reject(tx.error);
     });
   }

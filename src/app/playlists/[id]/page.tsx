@@ -31,7 +31,11 @@ export default function PlaylistDetailPage() {
             }
             setPlaylist(playlistData);
             const videoDetails = await db.getVideosByIds(playlistData.videoIds);
-            setVideos(videoDetails);
+            
+            // Filter out any vaulted videos, they shouldn't appear in regular playlists
+            const visibleVideos = videoDetails.filter(v => !v.isVaulted);
+            setVideos(visibleVideos);
+
         } catch (error) {
             console.error('Failed to load playlist:', error);
             toast({
@@ -56,8 +60,14 @@ export default function PlaylistDetailPage() {
         });
     }
 
-    const onVideoRenamed = (updatedVideo: VideoFile) => {
-        setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+    const onVideoUpdated = (updatedVideo: VideoFile) => {
+         if (updatedVideo.isVaulted) {
+            // If moved to vault, remove from this playlist view
+            setVideos(prev => prev.filter(v => v.id !== updatedVideo.id));
+        } else {
+            // Otherwise, update it in the list (e.g. rename)
+            setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+        }
     }
 
 
@@ -148,7 +158,7 @@ export default function PlaylistDetailPage() {
         <div className="flex flex-col h-full">
             <header className="flex items-center justify-between gap-4 p-4 border-b">
                 <div className="flex items-center gap-2">
-                    <SidebarTrigger className="hidden" />
+                    <SidebarTrigger className="md:hidden" />
                     <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')} className="hidden md:inline-flex">
                         <ArrowLeft />
                     </Button>
@@ -187,7 +197,7 @@ export default function PlaylistDetailPage() {
                                     video={video}
                                     onVideoDeleted={onVideoDeletedFromLibrary} 
                                     onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
-                                    onVideoRenamed={onVideoRenamed}
+                                    onVideoUpdated={onVideoUpdated}
                                     context="playlist"
                                     playlistId={playlist.id}
                                     layout="list"
@@ -203,5 +213,3 @@ export default function PlaylistDetailPage() {
         </div>
     );
 }
-
-    

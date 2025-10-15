@@ -37,7 +37,7 @@ export default function HomePage() {
   const loadVideos = useCallback(async () => {
     setLoading(true);
     try {
-      const storedVideos = await db.getAllVideos();
+      const storedVideos = await db.getAllVideos(false); // only get non-vaulted videos
       setVideos(storedVideos);
     } catch (error) {
       console.error('Failed to load videos:', error);
@@ -101,9 +101,16 @@ export default function HomePage() {
       description: "The video has been removed from your library.",
     });
   }
-  
-  const onVideoRenamed = (updatedVideo: VideoFile) => {
-    setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+
+  // This will handle both renaming and vaulting
+  const onVideoUpdated = (updatedVideo: VideoFile) => {
+    if (updatedVideo.isVaulted) {
+        // If moved to vault, remove from this view
+        setVideos(prev => prev.filter(v => v.id !== updatedVideo.id));
+    } else {
+        // Otherwise, update it in the list (e.g. rename)
+        setVideos(prev => prev.map(v => v.id === updatedVideo.id ? updatedVideo : v));
+    }
   }
 
   const toggleSelectionMode = () => {
@@ -161,7 +168,7 @@ export default function HomePage() {
     return (
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-b w-full">
              <div className="flex items-center gap-2 self-start md:self-center">
-                <SidebarTrigger className="h-10 w-10 hidden" />
+                <SidebarTrigger className="h-10 w-10 md:hidden" />
                 <h1 className="text-2xl font-bold">Video Library</h1>
             </div>
             <div className="flex items-center gap-2 w-full md:w-auto">
@@ -257,7 +264,7 @@ export default function HomePage() {
             <VideoGrid.Content 
                 videos={filteredVideos} 
                 onVideoDeleted={onVideoDeleted}
-                onVideoRenamed={onVideoRenamed}
+                onVideoUpdated={onVideoUpdated}
                 context="library"
                 isSelectionMode={isSelectionMode}
                 selectedVideoIds={selectedVideoIds}

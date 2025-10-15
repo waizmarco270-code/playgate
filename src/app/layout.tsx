@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import Script from 'next/script';
 import { LoadingScreenProvider } from '@/components/providers/loading-screen-provider';
 import BottomNav from '@/components/layout/bottom-nav';
+import { VaultProvider } from '@/components/providers/vault-provider';
 
 export const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
@@ -36,15 +37,17 @@ export default function RootLayout({
       <body className={cn('font-body antialiased')}>
         <ThemeProvider>
           <LoadingScreenProvider>
-            <SidebarProvider>
-              <div className="flex min-h-screen">
-                <AppSidebar />
-                <SidebarInset>
-                  <div className="md:pb-0 pb-20 h-full">{children}</div>
-                </SidebarInset>
-              </div>
-              <BottomNav />
-            </SidebarProvider>
+            <VaultProvider>
+              <SidebarProvider>
+                <div className="flex min-h-screen">
+                  <AppSidebar />
+                  <SidebarInset>
+                    <div className="md:pb-0 pb-20 h-full">{children}</div>
+                  </SidebarInset>
+                </div>
+                <BottomNav />
+              </SidebarProvider>
+            </VaultProvider>
             <Toaster />
           </LoadingScreenProvider>
         </ThemeProvider>

@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2, Edit } from 'lucide-react';
+import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2, Edit, Shield, ShieldOff } from 'lucide-react';
 import type { VideoFile } from '@/lib/types';
 import { formatDuration, cn } from '@/lib/utils';
 import {
@@ -13,6 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from './ui/button';
 import { db } from '@/lib/db';
@@ -20,13 +21,14 @@ import { Progress } from './ui/progress';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 import { AddToPlaylistDialog } from './add-to-playlist-dialog';
 import { RenameVideoDialog } from './rename-video-dialog';
+import { useVault } from './providers/vault-provider';
 
 interface VideoCardProps {
   video: VideoFile;
   onVideoDeleted: (videoId: string) => void;
-  onVideoRenamed: (updatedVideo: VideoFile) => void;
+  onVideoUpdated: (updatedVideo: VideoFile) => void;
   onVideoRemovedFromPlaylist?: (videoId: string) => void;
-  context?: 'library' | 'playlist';
+  context?: 'library' | 'playlist' | 'vault';
   playlistId?: string;
   layout?: 'grid' | 'list';
   isSelectionMode?: boolean;
@@ -37,7 +39,7 @@ interface VideoCardProps {
 export function VideoCard({ 
   video, 
   onVideoDeleted,
-  onVideoRenamed,
+  onVideoUpdated,
   onVideoRemovedFromPlaylist,
   context = 'library',
   playlistId,
@@ -50,6 +52,8 @@ export function VideoCard({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isAddToPlaylistOpen, setIsAddToPlaylistOpen] = useState(false);
   const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const { isUnlocked, unlock } = useVault();
+
 
   useEffect(() => {
     let url: string | null = null;
@@ -77,13 +81,24 @@ export function VideoCard({
     if (isSelectionMode && onSelect) {
       e.preventDefault();
       onSelect(video.id);
+    } else {
+        if (context === 'vault' && !isUnlocked) {
+            e.preventDefault();
+            unlock();
+        }
     }
   }
 
-  const handleVideoRenamed = (updatedVideo: VideoFile) => {
-    onVideoRenamed(updatedVideo);
-    setIsRenameDialogOpen(false);
+  const handleVideoUpdated = (updatedVideo: VideoFile) => {
+    onVideoUpdated(updatedVideo);
   }
+
+  const handleToggleVault = async () => {
+      const isVaulted = !video.isVaulted;
+      const updatedVideo = await db.toggleVaultStatus(video.id, isVaulted);
+      handleVideoUpdated(updatedVideo);
+  }
+
 
   const formattedDuration = useMemo(() => formatDuration(video.duration), [video.duration]);
 
@@ -159,6 +174,15 @@ export function VideoCard({
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Rename</span>
                       </DropdownMenuItem>
+                       <DropdownMenuItem onClick={handleToggleVault}>
+                         {video.isVaulted ? (
+                            <ShieldOff className="mr-2 h-4 w-4" />
+                         ) : (
+                            <Shield className="mr-2 h-4 w-4" />
+                         )}
+                        <span>{video.isVaulted ? 'Remove from Vault' : 'Move to Vault'}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
                         <ListPlus className="mr-2 h-4 w-4" />
                         <span>Add to Playlist</span>
@@ -195,14 +219,14 @@ export function VideoCard({
         />
         <AddToPlaylistDialog
           isOpen={isAddToPlaylistOpen}
-          onOpenChange={setIsAddToPlaylistOpen}
+          onOpenChange={(open) => setIsAddToPlaylistOpen(open)}
           videoIds={[video.id]}
         />
         <RenameVideoDialog
             isOpen={isRenameDialogOpen}
             onOpenChange={setIsRenameDialogOpen}
             video={video}
-            onVideoRenamed={handleVideoRenamed}
+            onVideoRenamed={handleVideoUpdated}
         />
       </>
     );
@@ -262,6 +286,15 @@ export function VideoCard({
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Rename</span>
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleToggleVault}>
+                         {video.isVaulted ? (
+                            <ShieldOff className="mr-2 h-4 w-4" />
+                         ) : (
+                            <Shield className="mr-2 h-4 w-4" />
+                         )}
+                        <span>{video.isVaulted ? 'Remove from Vault' : 'Move to Vault'}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => setIsAddToPlaylistOpen(true)}>
                         <ListPlus className="mr-2 h-4 w-4" />
                         <span>Add to Playlist</span>
@@ -303,17 +336,15 @@ export function VideoCard({
     />
     <AddToPlaylistDialog
       isOpen={isAddToPlaylistOpen}
-      onOpenChange={setIsAddToPlaylistOpen}
+      onOpenChange={(open) => setIsAddToPlaylistOpen(open)}
       videoIds={[video.id]}
     />
      <RenameVideoDialog
         isOpen={isRenameDialogOpen}
         onOpenChange={setIsRenameDialogOpen}
         video={video}
-        onVideoRenamed={handleVideoRenamed}
+        onVideoRenamed={handleVideoUpdated}
     />
     </>
   );
 }
-
-    

@@ -60,7 +60,7 @@ export default function PlaylistsPage() {
     <div className="flex flex-col h-full">
         <header className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center gap-2">
-                <SidebarTrigger className="hidden" />
+                <SidebarTrigger className="md:hidden" />
                 <h1 className="text-2xl font-bold">Playlists</h1>
             </div>
             <Button onClick={() => setIsCreateDialogOpen(true)}>

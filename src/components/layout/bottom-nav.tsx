@@ -3,7 +3,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Home, FolderKanban, Settings } from 'lucide-react';
+import { Home, FolderKanban, Settings, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useSidebar } from '../ui/sidebar';
 
@@ -14,6 +14,7 @@ const BottomNav = () => {
   const menuItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/playlists', label: 'Playlists', icon: FolderKanban },
+    { href: '/vault', label: 'Vault', icon: ShieldCheck },
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 

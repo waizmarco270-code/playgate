@@ -101,7 +101,7 @@ export default function SettingsPage() {
         <div className="flex flex-col h-full">
             <header className="p-4 border-b">
                 <div className="flex items-center gap-2">
-                    <SidebarTrigger className="hidden md:flex" />
+                    <SidebarTrigger className="md:hidden" />
                     <h1 className="text-2xl font-bold">Settings</h1>
                 </div>
             </header>
