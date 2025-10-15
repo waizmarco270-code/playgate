@@ -32,7 +32,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@700&family=Audiowide&display=swap" rel="stylesheet" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" href="/logo.jpg" />
+        <link rel="icon" href="/logo.jpg" sizes="any" />
       </head>
       <body className={cn('font-body antialiased')}>
         <ThemeProvider

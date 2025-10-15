@@ -46,7 +46,7 @@ const AppSidebar = () => {
     <Sidebar>
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <Image src="https://picsum.photos/seed/logo/32/32" alt="PlayGate Logo" width={32} height={32} className="rounded-full" data-ai-hint="logo abstract" />
+          <Image src="/logo.jpg" alt="PlayGate Logo" width={32} height={32} className="rounded-full" />
           <div className="flex flex-col">
             <h2 className="text-lg font-semibold tracking-tight">PlayGate</h2>
             <p className="text-xs text-muted-foreground">Your Offline Video Universe</p>

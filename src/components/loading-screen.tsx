@@ -109,7 +109,7 @@ const IconRain = () => {
             {icons.map(({ id, Icon, style, size }) => (
                 <Icon
                     key={id}
-                    className="absolute text-cyan-400/30 dark:text-cyan-400/30 text-blue-500/30 animate-fall"
+                    className="absolute text-blue-500/30 dark:text-cyan-400/30 animate-fall"
                     style={style}
                     size={size}
                     strokeWidth={1.5}
@@ -164,12 +164,11 @@ export const LoadingScreen = () => {
                 <div className="absolute inset-2 border border-blue-500/20 dark:border-cyan-400/20 rounded-full animate-ping"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
                     <Image 
-                        src="https://picsum.photos/seed/cliff/144/144" 
+                        src="/logo.jpg" 
                         alt="PlayGate Logo" 
                         width={144} 
                         height={144} 
                         className="rounded-full shadow-2xl shadow-blue-500/20 dark:shadow-cyan-500/20"
-                        data-ai-hint="cliff coast"
                         priority
                     />
                 </div>
