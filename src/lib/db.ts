@@ -1,3 +1,4 @@
+
 'use client';
 import { generateVideoThumbnail, getVideoDuration } from './utils';
 import type { VideoFile, VideoFileHandle, StoredVideoFile } from './types';
@@ -73,6 +74,8 @@ class IndexedDBManager {
           lastPlayed: 0,
           createdAt: new Date(),
           favorited: false,
+          size: file.size,
+          type: file.type,
           video: file, // Store the file blob itself
         };
         

@@ -1,3 +1,4 @@
+
 export interface VideoFile {
   id: string;
   name: string;
@@ -6,6 +7,8 @@ export interface VideoFile {
   lastPlayed: number;
   createdAt: Date;
   favorited: boolean;
+  size: number;
+  type: string;
 }
 
 export interface StoredVideoFile extends VideoFile {
