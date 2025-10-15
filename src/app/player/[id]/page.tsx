@@ -5,7 +5,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { notFound, useRouter, useSearchParams, useParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
-import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera, AudioLines, Captions, MoreVertical } from 'lucide-react';
+import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera, AudioLines, Captions, MoreVertical, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDuration, formatBytes } from '@/lib/utils';
@@ -275,6 +275,10 @@ export default function PlayerPage() {
         const duration = videoRef.current.duration;
         const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
         await db.updateVideoProgress(videoMetadata.id, currentTime, progress);
+        if (progress > 98 && !videoMetadata.isCompleted) {
+          const updatedVideo = await db.toggleVideoCompletedStatus(videoMetadata.id, true);
+          setVideoMetadata(updatedVideo);
+        }
       }
     },
     5000 // Save progress every 5 seconds
@@ -332,7 +336,11 @@ export default function PlayerPage() {
     }, 'image/jpeg', 0.8);
   }, [videoMetadata, toast]);
 
-  const handleVideoEnded = () => {
+  const handleVideoEnded = async () => {
+    if (videoMetadata && !videoMetadata.isCompleted) {
+        const updatedVideo = await db.toggleVideoCompletedStatus(videoMetadata.id, true);
+        setVideoMetadata(updatedVideo);
+    }
     if (isNextEnabled) {
       handleNext();
     }
@@ -391,7 +399,10 @@ export default function PlayerPage() {
           </PopoverTrigger>
           <PopoverContent className="w-80">
             <div className="grid gap-4">
-              <h3 className="font-medium leading-none">Video Details</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium leading-none">Video Details</h3>
+                {videoMetadata.isCompleted && <div className="flex items-center gap-1.5 text-xs text-green-500"><CheckCircle2 className="h-3.5 w-3.5" />Completed</div>}
+              </div>
               <div className="flex items-center">
                 <FileVideo className="h-4 w-4 mr-2 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground flex-1">Type</span>
@@ -514,7 +525,7 @@ export default function PlayerPage() {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                         <DropdownMenuSubContent>
-                            <DropdownMenuRadioGroup value={selectedTextTrackId} onValuechange={handleTextTrackChange}>
+                            <DropdownMenuRadioGroup value={selectedTextTrackId} onchange={handleTextTrackChange}>
                                 <DropdownMenuRadioItem value="off">Off</DropdownMenuRadioItem>
                                 {textTracks.map(track => (
                                     <DropdownMenuRadioItem key={track.id} value={track.id}>{track.label || `Track ${track.id}`}</DropdownMenuRadioItem>
@@ -536,7 +547,10 @@ export default function PlayerPage() {
           <ArrowLeft />
         </Button>
         <div className="flex-1 overflow-hidden">
-            <h1 className="text-lg md:text-xl font-bold truncate" title={videoMetadata.name}>{videoMetadata.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg md:text-xl font-bold truncate" title={videoMetadata.name}>{videoMetadata.name}</h1>
+              {videoMetadata.isCompleted && <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />}
+            </div>
             <p className="text-xs md:text-sm text-muted-foreground">{playlist ? `${playlist.name} (${currentVideoIndex + 1} / ${playlist.videoIds.length})` : `Added on ${new Date(videoMetadata.createdAt).toLocaleDateString()}`}</p>
         </div>
         <div className="flex items-center gap-1.5">

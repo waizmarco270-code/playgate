@@ -4,7 +4,7 @@ import { generateVideoThumbnail, getVideoDuration } from './utils';
 import type { VideoFile, VideoFileHandle, StoredVideoFile, Playlist } from './types';
 
 const DB_NAME = 'WaizPlayDB';
-const DB_VERSION = 4; // Incremented version for vault feature
+const DB_VERSION = 5; // Incremented version for isCompleted feature
 const VIDEO_STORE = 'videos';
 const FILE_HANDLE_STORE = 'fileHandles';
 const PLAYLIST_STORE = 'playlists';
@@ -81,6 +81,9 @@ class IndexedDBManager {
         if (!videoStore.indexNames.contains('isVaulted')) {
             videoStore.createIndex('isVaulted', 'isVaulted', { unique: false });
         }
+        if (!videoStore.indexNames.contains('isCompleted')) {
+            videoStore.createIndex('isCompleted', 'isCompleted', { unique: false });
+        }
 
         if (!db.objectStoreNames.contains(FILE_HANDLE_STORE)) {
           db.createObjectStore(FILE_HANDLE_STORE, { keyPath: 'id' });
@@ -134,6 +137,7 @@ class IndexedDBManager {
               currentTime: 0,
               progress: 0,
               isVaulted: false,
+              isCompleted: false,
             };
             
             const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
@@ -272,6 +276,9 @@ class IndexedDBManager {
                 videoData.currentTime = currentTime;
                 videoData.progress = progress;
                 videoData.lastPlayed = Date.now();
+                if (progress > 98) {
+                    videoData.isCompleted = true;
+                }
                 store.put(videoData);
             }
         };
@@ -335,6 +342,28 @@ class IndexedDBManager {
             const videoData = request.result;
             if (videoData) {
                 videoData.isVaulted = isVaulted;
+                store.put(videoData);
+                const { video, ...rest } = videoData;
+                resolve(rest);
+            } else {
+                reject("Video not found");
+            }
+        };
+        tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async toggleVideoCompletedStatus(id: string, isCompleted: boolean): Promise<VideoFile> {
+     const db = await this.getDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(VIDEO_STORE, 'readwrite');
+        const store = tx.objectStore(VIDEO_STORE);
+        const request = store.get(id);
+
+        request.onsuccess = () => {
+            const videoData = request.result;
+            if (videoData) {
+                videoData.isCompleted = isCompleted;
                 store.put(videoData);
                 const { video, ...rest } = videoData;
                 resolve(rest);

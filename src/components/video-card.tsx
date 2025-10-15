@@ -5,7 +5,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
-import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2, Edit, Shield, ShieldOff } from 'lucide-react';
+import { MoreHorizontal, Trash2, ListPlus, XCircle, Film, CheckCircle2, Edit, Shield, ShieldOff, Check } from 'lucide-react';
 import type { VideoFile } from '@/lib/types';
 import { formatDuration, cn } from '@/lib/utils';
 import {
@@ -22,7 +22,7 @@ import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 import { AddToPlaylistDialog } from './add-to-playlist-dialog';
 import { RenameVideoDialog } from './rename-video-dialog';
 import { useVault } from './providers/vault-provider';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface VideoCardProps {
   video: VideoFile;
@@ -100,6 +100,12 @@ export function VideoCard({
       handleVideoUpdated(updatedVideo);
   }
 
+  const handleToggleCompleted = async () => {
+    const isCompleted = !video.isCompleted;
+    const updatedVideo = await db.toggleVideoCompletedStatus(video.id, isCompleted);
+    handleVideoUpdated(updatedVideo);
+  }
+
 
   const formattedDuration = useMemo(() => formatDuration(video.duration), [video.duration]);
 
@@ -138,6 +144,18 @@ export function VideoCard({
                           <Film className="w-8 h-8 text-muted-foreground" />
                         </div>
                       )}
+                      <AnimatePresence>
+                        {video.isCompleted && (
+                           <motion.div 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="absolute inset-0 bg-black/50 flex items-center justify-center"
+                            >
+                              <CheckCircle2 className="h-10 w-10 text-white/80" />
+                           </motion.div>
+                        )}
+                      </AnimatePresence>
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                         <span className="absolute bottom-1 right-1 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-md">
                           {formattedDuration}
@@ -177,6 +195,10 @@ export function VideoCard({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => { e.stopPropagation(); }}>
+                      <DropdownMenuItem onClick={handleToggleCompleted}>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        <span>{video.isCompleted ? 'Mark as Incomplete' : 'Mark as Complete'}</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setIsRenameDialogOpen(true)}>
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Rename</span>
@@ -265,6 +287,18 @@ export function VideoCard({
                   <Film className="w-8 h-8 text-muted-foreground" />
                 </div>
               )}
+              <AnimatePresence>
+                {video.isCompleted && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 bg-black/50 flex items-center justify-center"
+                    >
+                      <CheckCircle2 className="h-12 w-12 text-white/80" />
+                    </motion.div>
+                )}
+              </AnimatePresence>
               {isSelectionMode && (
                  <motion.div
                     layout
@@ -297,6 +331,10 @@ export function VideoCard({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                       <DropdownMenuItem onClick={handleToggleCompleted}>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        <span>{video.isCompleted ? 'Mark as Incomplete' : 'Mark as Complete'}</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setIsRenameDialogOpen(true)}>
                         <Edit className="mr-2 h-4 w-4" />
                         <span>Rename</span>

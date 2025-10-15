@@ -12,6 +12,7 @@ export interface VideoFile {
   currentTime?: number;
   progress?: number; // 0-100
   isVaulted?: boolean;
+  isCompleted?: boolean;
 }
 
 export interface StoredVideoFile extends VideoFile {
