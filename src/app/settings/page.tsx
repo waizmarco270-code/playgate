@@ -8,13 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
-import { HardDriveDownload, HardDriveUpload, Trash2, ShieldCheck, Database, KeyRound } from 'lucide-react';
+import { HardDriveDownload, HardDriveUpload, Trash2, ShieldCheck, Database, KeyRound, Download } from 'lucide-react';
 import { useRef } from 'react';
+import { usePwaInstall } from '@/components/providers/pwa-install-provider';
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const { toast } = useToast();
     const importInputRef = useRef<HTMLInputElement>(null);
+    const { canInstall, install } = usePwaInstall();
 
     const handleReset = async () => {
         if(confirm('Are you sure you want to delete all your data? This action cannot be undone.')) {
@@ -162,7 +164,7 @@ export default function SettingsPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle>Data Management</CardTitle>
-                            <CardDescription>Manage your local application data.</CardDescription>
+                            <CardDescription>Manage your local application data and installation.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                              <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -192,6 +194,18 @@ export default function SettingsPage() {
                                     onChange={handleImport}
                                 />
                             </div>
+                            {canInstall && (
+                                <div className="flex items-center justify-between p-4 border rounded-lg">
+                                    <div>
+                                        <h3 className="font-semibold">Install App</h3>
+                                        <p className="text-sm text-muted-foreground">Install PlayGate on your device for a native app experience.</p>
+                                    </div>
+                                    <Button variant="outline" onClick={install}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Install
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 

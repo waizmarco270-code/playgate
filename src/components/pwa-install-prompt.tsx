@@ -1,77 +1,15 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
+import { usePwaInstall } from './providers/pwa-install-provider';
 
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
 
 export function PwaInstallPrompt() {
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (event: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
-      event.preventDefault();
-      
-      // Stash the event so it can be triggered later.
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-
-      // Check if the app is already installed. If so, don't show the prompt.
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-      const hasSeenPrompt = sessionStorage.getItem('pwaInstallPromptDismissed');
-
-      if (!isStandalone && !hasSeenPrompt) {
-        setIsVisible(true);
-      }
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    window.addEventListener('appinstalled', () => {
-      // Hide the prompt if the app is installed
-      setIsVisible(false);
-      setInstallPrompt(null);
-    });
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    };
-  }, []);
-
-  const handleInstallClick = async () => {
-    if (!installPrompt) {
-      return;
-    }
-    // Show the install prompt
-    await installPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
-    }
-    // We can only use the prompt once, so clear it.
-    setInstallPrompt(null);
-    setIsVisible(false);
-  };
-
-  const handleDismiss = () => {
-    setIsVisible(false);
-    sessionStorage.setItem('pwaInstallPromptDismissed', 'true');
-  };
+  const { isVisible, install, dismiss } = usePwaInstall();
 
   return (
     <AnimatePresence>
@@ -93,11 +31,11 @@ export function PwaInstallPrompt() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                        <Button size="sm" onClick={handleInstallClick}>
+                        <Button size="sm" onClick={install}>
                         <Download className="mr-2 h-4 w-4" />
                         Install
                         </Button>
-                         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={handleDismiss}>
+                         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={dismiss}>
                             <X className="h-4 w-4" />
                         </Button>
                     </div>

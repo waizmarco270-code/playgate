@@ -15,6 +15,7 @@ import { PrivacyPopup } from '@/components/privacy-popup';
 import { useState, useEffect } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
+import { PWAInstallProvider } from '@/components/providers/pwa-install-provider';
 
 const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
@@ -65,22 +66,24 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LoadingScreenProvider>
-            <VaultProvider>
-              <SidebarProvider>
-                <PwaInstallPrompt />
-                <div className="flex min-h-screen">
-                  <AppSidebar />
-                  <SidebarInset>
-                    <div className="md:pb-0 pb-20 h-full">{children}</div>
-                  </SidebarInset>
-                </div>
-                <BottomNav />
-              </SidebarProvider>
-            </VaultProvider>
-          </LoadingScreenProvider>
-          <Toaster />
-          <PrivacyPopup isOpen={showPrivacyPopup} onClose={handlePrivacyPopupClose} />
+          <PWAInstallProvider>
+            <LoadingScreenProvider>
+              <VaultProvider>
+                <SidebarProvider>
+                  <PwaInstallPrompt />
+                  <div className="flex min-h-screen">
+                    <AppSidebar />
+                    <SidebarInset>
+                      <div className="md:pb-0 pb-20 h-full">{children}</div>
+                    </SidebarInset>
+                  </div>
+                  <BottomNav />
+                </SidebarProvider>
+              </VaultProvider>
+            </LoadingScreenProvider>
+            <Toaster />
+            <PrivacyPopup isOpen={showPrivacyPopup} onClose={handlePrivacyPopupClose} />
+          </PWAInstallProvider>
         </ThemeProvider>
         <Script id="service-worker-registration">
           {`
