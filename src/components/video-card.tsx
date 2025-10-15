@@ -25,13 +25,15 @@ interface VideoCardProps {
   onVideoDeleted: (videoId: string) => void;
   onVideoRemovedFromPlaylist?: (videoId: string) => void;
   context?: 'library' | 'playlist';
+  playlistId?: string;
 }
 
 export function VideoCard({ 
   video, 
   onVideoDeleted,
   onVideoRemovedFromPlaylist,
-  context = 'library'
+  context = 'library',
+  playlistId
 }: VideoCardProps) {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -58,9 +60,13 @@ export function VideoCard({
 
   const formattedDuration = useMemo(() => formatDuration(video.duration), [video.duration]);
 
+  const playerUrl = context === 'playlist' && playlistId 
+    ? `/player/${video.id}?playlist=${playlistId}`
+    : `/player/${video.id}`;
+
   return (
     <>
-    <Link href={`/player/${video.id}`} className="group block">
+    <Link href={playerUrl} className="group block">
       <Card className="overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-primary/20 hover:-translate-y-1">
         <CardContent className="p-0">
           <div className="relative aspect-video">

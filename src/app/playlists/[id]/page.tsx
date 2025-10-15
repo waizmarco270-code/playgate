@@ -61,6 +61,7 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
         try {
             await db.removeVideoFromPlaylist(playlist.id, videoId);
             setVideos(prev => prev.filter(v => v.id !== videoId));
+            setPlaylist(prev => prev ? {...prev, videoIds: prev.videoIds.filter(id => id !== videoId)} : null);
             toast({
                 title: "Video Removed",
                 description: "The video has been removed from this playlist.",
@@ -134,6 +135,7 @@ export default function PlaylistDetailPage({ params }: { params: { id: string } 
                             onVideoDeleted={onVideoDeletedFromLibrary} 
                             onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
                             context="playlist"
+                            playlistId={playlist.id}
                         />
                     </VideoGrid>
                 )}

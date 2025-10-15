@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MoreHorizontal, Trash2, Edit, ListVideo } from 'lucide-react';
+import { MoreHorizontal, Trash2, Edit, ListVideo, Play } from 'lucide-react';
 import type { Playlist, VideoFile } from '@/lib/types';
 import {
   DropdownMenu,
@@ -18,6 +18,7 @@ import { db } from '@/lib/db';
 import { DeleteConfirmationDialog } from './delete-confirmation-dialog';
 import { CreatePlaylistDialog } from './create-playlist-dialog';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface PlaylistCardProps {
   playlist: Playlist;
@@ -30,6 +31,7 @@ export function PlaylistCard({ playlist, onDeleted, onUpdated }: PlaylistCardPro
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [firstVideo, setFirstVideo] = useState<VideoFile | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchFirstVideo = async () => {
@@ -70,6 +72,14 @@ export function PlaylistCard({ playlist, onDeleted, onUpdated }: PlaylistCardPro
     onUpdated();
   }
 
+  const handlePlayPlaylist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (playlist.videoIds.length > 0) {
+      router.push(`/player/${playlist.videoIds[0]}?playlist=${playlist.id}`);
+    }
+  }
+
   return (
     <>
       <div className="group relative">
@@ -89,7 +99,17 @@ export function PlaylistCard({ playlist, onDeleted, onUpdated }: PlaylistCardPro
                     <ListVideo className="w-12 h-12 text-muted-foreground" />
                 </div>
                 )}
-                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        className="h-12 w-12 rounded-full"
+                        onClick={handlePlayPlaylist}
+                        disabled={playlist.videoIds.length === 0}
+                    >
+                        <Play className="h-6 w-6" />
+                    </Button>
+                 </div>
                  <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-md">
                     {playlist.videoIds.length} video{playlist.videoIds.length !== 1 ? 's' : ''}
                 </span>

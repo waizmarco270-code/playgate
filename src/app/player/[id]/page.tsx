@@ -2,9 +2,9 @@
 'use client';
 
 import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useSearchParams } from 'next/navigation';
 import { db } from '@/lib/db';
-import type { VideoFile } from '@/lib/types';
+import type { Playlist, VideoFile } from '@/lib/types';
 import { ArrowLeft, PictureInPicture, Gauge, FileVideo, CalendarDays, Info, SkipBack, SkipForward, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,7 +30,13 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [playbackRate, setPlaybackRate] = useState('1');
+  const [playlist, setPlaylist] = useState<Playlist | null>(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(-1);
+
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const playlistId = searchParams.get('playlist');
+
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerContainerRef = useRef<HTMLDivElement>(null);
@@ -73,6 +79,15 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
             throw new Error("Could not create video URL.");
         }
 
+        if (playlistId) {
+            const playlistData = await db.getPlaylist(playlistId);
+            if (playlistData) {
+                setPlaylist(playlistData);
+                const index = playlistData.videoIds.indexOf(params.id);
+                setCurrentVideoIndex(index);
+            }
+        }
+
       } catch (err: any) {
         console.error('Failed to load video:', err);
         setError(err.message || 'An unexpected error occurred.');
@@ -95,7 +110,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
         URL.revokeObjectURL(videoUrl);
       }
     };
-  }, [params.id, toast]);
+  }, [params.id, playlistId, toast]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -114,9 +129,11 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
           video.paused ? video.play() : video.pause();
           break;
         case 'arrowright':
+          e.preventDefault();
           video.currentTime += 5;
           break;
         case 'arrowleft':
+          e.preventDefault();
           video.currentTime -= 5;
           break;
         case 'arrowup':
@@ -131,12 +148,19 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
           video.muted = !video.muted;
           break;
         case 'f':
+          e.preventDefault();
           if (!document.fullscreenElement) {
             playerContainerRef.current?.requestFullscreen();
           } else {
             document.exitFullscreen();
           }
           break;
+        case 'n': // next
+            if (isNextEnabled) handleNext();
+            break;
+        case 'p': // previous
+            if (isPrevEnabled) handlePrev();
+            break;
       }
     };
 
@@ -144,7 +168,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [handleNext, handlePrev, isNextEnabled, isPrevEnabled]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -227,6 +251,30 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
   }, [videoMetadata, toast]);
 
 
+  const isPrevEnabled = playlist ? currentVideoIndex > 0 : false;
+  const isNextEnabled = playlist ? currentVideoIndex < playlist.videoIds.length - 1 : false;
+
+  // Using useCallback to memoize these functions
+  const handlePrev = useCallback(() => {
+      if (playlist && isPrevEnabled) {
+          const prevVideoId = playlist.videoIds[currentVideoIndex - 1];
+          router.push(`/player/${prevVideoId}?playlist=${playlistId}`);
+      }
+  }, [playlist, isPrevEnabled, currentVideoIndex, router, playlistId]);
+
+  const handleNext = useCallback(() => {
+      if (playlist && isNextEnabled) {
+          const nextVideoId = playlist.videoIds[currentVideoIndex + 1];
+          router.push(`/player/${nextVideoId}?playlist=${playlistId}`);
+      }
+  }, [playlist, isNextEnabled, currentVideoIndex, router, playlistId]);
+
+  const handleVideoEnded = () => {
+    if (isNextEnabled) {
+      handleNext();
+    }
+  }
+
   const formattedDuration = useMemo(() => videoMetadata ? formatDuration(videoMetadata.duration) : 'N/A', [videoMetadata]);
   const formattedSize = useMemo(() => videoMetadata ? formatBytes(videoMetadata.size) : 'N/A', [videoMetadata]);
 
@@ -272,24 +320,24 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
         </Button>
         <div className="flex-1 overflow-hidden">
             <h1 className="text-xl font-bold truncate" title={videoMetadata.name}>{videoMetadata.name}</h1>
-            <p className="text-sm text-muted-foreground">Added on {new Date(videoMetadata.createdAt).toLocaleDateString()}</p>
+            <p className="text-sm text-muted-foreground">{playlist ? `${playlist.name} (${currentVideoIndex + 1} / ${playlist.videoIds.length})` : `Added on ${new Date(videoMetadata.createdAt).toLocaleDateString()}`}</p>
         </div>
         <div className="flex items-center gap-1.5">
-            <Button variant="ghost" size="icon" disabled>
+            <Button variant="ghost" size="icon" onClick={handlePrev} disabled={!isPrevEnabled} title="Previous (p)">
                 <SkipBack className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" disabled>
+            <Button variant="ghost" size="icon" onClick={handleNext} disabled={!isNextEnabled} title="Next (n)">
                 <SkipForward className="h-5 w-5" />
             </Button>
 
-            <Button variant="outline" size="icon" onClick={handleSetThumbnail}>
+            <Button variant="outline" size="icon" onClick={handleSetThumbnail} title="Set current frame as thumbnail">
               <Camera className="h-4 w-4" />
               <span className="sr-only">Set as Thumbnail</span>
             </Button>
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" title="Video Info">
                   <Info className="h-4 w-4" />
                   <span className="sr-only">Video Info</span>
                 </Button>
@@ -318,7 +366,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-24">
+                <Button variant="outline" className="w-24" title="Playback speed">
                   <Gauge className="mr-2 h-4 w-4" /> {playbackRate}x
                 </Button>
               </DropdownMenuTrigger>
@@ -333,7 +381,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
             </DropdownMenu>
 
             {document.pictureInPictureEnabled && (
-                <Button variant="outline" size="icon" onClick={handleTogglePiP}>
+                <Button variant="outline" size="icon" onClick={handleTogglePiP} title="Picture-in-Picture">
                     <PictureInPicture className="h-4 w-4" />
                     <span className="sr-only">Toggle Picture-in-Picture</span>
                 </Button>
@@ -350,6 +398,7 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
               autoPlay
               className="w-full h-full"
               onCanPlay={handleCanPlay}
+              onEnded={handleVideoEnded}
               crossOrigin="anonymous" 
             />
           )}
@@ -358,5 +407,3 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
-
-    
