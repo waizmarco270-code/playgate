@@ -4,7 +4,38 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/components/providers/theme-provider';
-import { Film, Clapperboard, Video, PlayCircle, SlidersHorizontal, Camera } from 'lucide-react';
+import React from 'react';
+
+const DigitalStreamBackground = React.memo(() => {
+    const columns = Array.from({ length: 50 }).map((_, i) => i);
+    const characters = '01';
+
+    const randomChar = () => characters.charAt(Math.floor(Math.random() * characters.length));
+    const randomString = (length: number) => Array.from({ length }).map(randomChar).join('');
+
+    return (
+         <div className="absolute inset-0 overflow-hidden z-0">
+            {columns.map(i => (
+                <div 
+                    key={`col-${i}`} 
+                    className="absolute top-0 h-full text-primary/40 font-mono text-xs md:text-sm animate-digital-rain"
+                    style={{
+                        left: `${i * 2}%`,
+                        writingMode: 'vertical-rl',
+                        textOrientation: 'upright',
+                        animationDuration: `${Math.random() * 10 + 10}s`,
+                        animationDelay: `${Math.random() * -20}s`,
+                        transform: `translateY(-100vh) scale(0.8, 1)`,
+                    }}
+                >
+                   {randomString(100)}
+                </div>
+            ))}
+        </div>
+    );
+});
+DigitalStreamBackground.displayName = 'DigitalStreamBackground';
+
 
 export function LoadingScreen({ progress }: { progress: number }) {
     const { resolvedTheme } = useTheme();
@@ -51,25 +82,13 @@ export function LoadingScreen({ progress }: { progress: number }) {
             exit="exit"
             className={cn(
                 "fixed inset-0 z-[200] flex flex-col items-center justify-center pointer-events-none",
-                "bg-[length:400%_400%] animate-gradient-shift",
-                isDark ? "bg-gradient-to-br from-[#0A0A0A] via-[#121212] to-[#0A0A0A]" : "bg-gradient-to-br from-[#f0f0f0] via-[#FFFFFF] to-[#E8E8E8]"
+                isDark ? "bg-black" : "bg-white"
             )}
         >
-            {/* Raining Icons Effect */}
-            <div className="absolute inset-0 overflow-hidden">
-                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-1" style={{left: '10%'}} />
-                <Clapperboard className="absolute h-6 w-6 text-primary/10 animate-rain-2" style={{left: '20%'}}/>
-                <Video className="absolute h-10 w-10 text-primary/10 animate-rain-3" style={{left: '30%'}}/>
-                <PlayCircle className="absolute h-8 w-8 text-primary/10 animate-rain-4" style={{left: '40%'}}/>
-                <SlidersHorizontal className="absolute h-6 w-6 text-primary/10 animate-rain-5" style={{left: '50%'}}/>
-                <Camera className="absolute h-7 w-7 text-primary/10 animate-rain-6" style={{left: '60%'}}/>
-                <Film className="absolute h-8 w-8 text-primary/10 animate-rain-7" style={{left: '70%'}}/>
-                <Video className="absolute h-10 w-10 text-primary/10 animate-rain-1" style={{left: '80%', animationDelay: '1s'}}/>
-                <PlayCircle className="absolute h-8 w-8 text-primary/10 animate-rain-3" style={{left: '90%', animationDelay: '3s'}}/>
-                <Camera className="absolute h-7 w-7 text-primary/10 animate-rain-5" style={{left: '5%', animationDelay: '5s'}}/>
-            </div>
+            {/* Digital Stream Effect */}
+            <DigitalStreamBackground />
 
-            <div className="relative flex flex-col items-center justify-center text-center">
+            <div className="relative z-10 flex flex-col items-center justify-center text-center p-4 rounded-full bg-background/80 backdrop-blur-sm">
                 {/* Logo with Glow */}
                 <motion.div
                     className="relative w-24 h-24 md:w-32 md:h-32"
@@ -95,7 +114,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-6 font-headline font-extrabold text-2xl md:text-3xl uppercase tracking-[0.25em] ml-[0.25em]",
-                        isDark ? "text-white" : "text-black"
+                        "text-foreground"
                     )}
                 >
                     PlayGate
@@ -108,7 +127,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-2 text-sm tracking-widest",
-                        isDark ? "text-white/60" : "text-black/60"
+                        "text-muted-foreground"
                     )}
                 >
                     Enter Your World of Play.
@@ -116,7 +135,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
             </div>
             
             {/* Signature & Progress Zone */}
-            <div className="absolute bottom-6 md:bottom-10 text-center w-full max-w-xs px-4">
+            <div className="absolute bottom-6 md:bottom-10 text-center w-full max-w-xs px-4 z-10">
                  <motion.p
                     variants={signatureVariants(1.2)}
                     initial="hidden"
@@ -132,7 +151,7 @@ export function LoadingScreen({ progress }: { progress: number }) {
                     animate="visible"
                     className={cn(
                         "mt-2 text-xs italic",
-                        isDark ? "text-white/70" : "text-black/70"
+                        "text-foreground/70"
                     )}
                  >
                     Developed by Waiz Marco
