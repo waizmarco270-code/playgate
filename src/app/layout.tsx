@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/app-sidebar';
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
+import { LoadingScreenProvider } from '@/components/providers/loading-screen-provider';
 
 export const metadata: Metadata = {
   title: 'PlayGate - Your Offline Video Universe',
@@ -28,11 +29,12 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@700&family=Audiowide&display=swap" rel="stylesheet" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
       </head>
       <body className={cn('font-body antialiased')}>
         <ThemeProvider>
+          <LoadingScreenProvider>
             <SidebarProvider>
               <div className="flex min-h-screen">
                 <AppSidebar />
@@ -40,6 +42,7 @@ export default function RootLayout({
               </div>
             </SidebarProvider>
             <Toaster />
+          </LoadingScreenProvider>
         </ThemeProvider>
         <Script id="service-worker-registration">
           {`

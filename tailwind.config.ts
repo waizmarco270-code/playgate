@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -13,6 +14,8 @@ export default {
         body: ['Poppins', 'sans-serif'],
         headline: ['Poppins', 'sans-serif'],
         code: ['monospace'],
+        futuristic: ['Orbitron', 'sans-serif'],
+        tech: ['Audiowide', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
@@ -88,10 +91,40 @@ export default {
             height: '0',
           },
         },
+        'pulse-glow': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '0.5' },
+          '50%': { transform: 'scale(1.5)', opacity: '0.2' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+        'particle-1': {
+          '0%': { transform: 'translate(10vw, 100vh) scale(0)', opacity: '1' },
+          '100%': { transform: 'translate(40vw, -10vh) scale(1)', opacity: '0' },
+        },
+        'particle-2': {
+          '0%': { transform: 'translate(90vw, 80vh) scale(0)', opacity: '1' },
+          '100%': { transform: 'translate(10vw, 20vh) scale(1)', opacity: '0' },
+        },
+        'particle-3': {
+          '0%': { transform: 'translate(20vw, 110vh) scale(0)', opacity: '1' },
+          '100%': { transform: 'translate(80vw, 10vh) scale(1)', opacity: '0' },
+        },
+        'particle-4': {
+          '0%': { transform: 'translate(50vw, 0vh) scale(0)', opacity: '1' },
+          '100%': { transform: 'translate(70vw, 100vh) scale(1)', opacity: '0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-glow': 'pulse-glow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        shimmer: 'shimmer 3s linear infinite',
+        'particle-1': 'particle-1 25s linear infinite',
+        'particle-2': 'particle-2 30s linear infinite',
+        'particle-3': 'particle-3 20s linear infinite',
+        'particle-4': 'particle-4 35s linear infinite',
       },
     },
   },
