@@ -9,6 +9,38 @@ const VIDEO_STORE = 'videos';
 const FILE_HANDLE_STORE = 'fileHandles';
 const PLAYLIST_STORE = 'playlists';
 
+
+interface ExportData {
+    videos: Omit<VideoFile, 'thumbnail'> & { thumbnail?: string }; // thumbnail as base64
+    playlists: Playlist[];
+}
+
+// Helper to convert blob to base64
+const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+}
+
+// Helper to convert base64 to blob
+const base64ToBlob = (base64: string): Blob => {
+    const parts = base64.split(';base64,');
+    const contentType = parts[0].split(':')[1];
+    const raw = window.atob(parts[1]);
+    const rawLength = raw.length;
+    const uInt8Array = new Uint8Array(rawLength);
+
+    for (let i = 0; i < rawLength; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+    }
+
+    return new Blob([uInt8Array], { type: contentType });
+}
+
+
 class IndexedDBManager {
   private db: IDBDatabase | null = null;
 
@@ -384,8 +416,68 @@ class IndexedDBManager {
       tx.onerror = () => reject(tx.error);
     });
   }
+
+  // DATA MANAGEMENT METHODS
+  async exportData(): Promise<ExportData> {
+    const videos = await this.getAllVideos();
+    const playlists = await this.getAllPlaylists();
+
+    const exportableVideos = await Promise.all(videos.map(async (video) => {
+        const { thumbnail, ...rest } = video;
+        let thumbnailBase64: string | undefined;
+        if (thumbnail) {
+            thumbnailBase64 = await blobToBase64(thumbnail);
+        }
+        return { ...rest, createdAt: rest.createdAt.toISOString(), thumbnail: thumbnailBase64 };
+    }));
+
+    const exportablePlaylists = playlists.map(p => ({
+        ...p,
+        createdAt: p.createdAt.toISOString()
+    }));
+
+    return { videos: exportableVideos as any, playlists: exportablePlaylists as any };
+  }
+
+  async importData(data: ExportData): Promise<void> {
+      const db = await this.getDB();
+
+      // Clear existing data but not file handles
+      const clearTx = db.transaction([VIDEO_STORE, PLAYLIST_STORE], 'readwrite');
+      clearTx.objectStore(VIDEO_STORE).clear();
+      clearTx.objectStore(PLAYLIST_STORE).clear();
+      await new Promise((resolve, reject) => {
+          clearTx.oncomplete = () => resolve(null);
+          clearTx.onerror = () => reject(clearTx.error);
+      });
+
+      const importTx = db.transaction([VIDEO_STORE, PLAYLIST_STORE], 'readwrite');
+      const videoStore = importTx.objectStore(VIDEO_STORE);
+      const playlistStore = importTx.objectStore(PLAYLIST_STORE);
+
+      for (const videoData of data.videos) {
+          const { thumbnail: thumbnailBase64, ...rest } = videoData;
+          let thumbnail: Blob | undefined;
+          if (thumbnailBase64) {
+              thumbnail = base64ToBlob(thumbnailBase64);
+          }
+          // The actual video file/blob is missing, which is expected.
+          // The app must handle playing videos without a file blob.
+          // We set `video` to null to indicate it needs to be re-linked.
+          const videoToStore = { ...rest, createdAt: new Date(rest.createdAt), thumbnail, video: null };
+          videoStore.put(videoToStore);
+      }
+
+      for (const playlistData of data.playlists) {
+          playlistStore.put({ ...playlistData, createdAt: new Date(playlistData.createdAt) });
+      }
+
+      return new Promise((resolve, reject) => {
+          importTx.oncomplete = () => resolve();
+          importTx.onerror = () => reject(importTx.error);
+      });
+  }
+
 }
 
 export const db = new IndexedDBManager();
-
-    
