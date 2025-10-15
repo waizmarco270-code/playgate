@@ -21,18 +21,14 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Determine if this is the first visit of the session.
-    const isFirstVisit = !sessionStorage.getItem('playgate-session-started');
-
-    // If settings are still loading, don't do anything yet.
+    // If settings are still loading, we are definitely in a loading state.
     if (settingsLoading) {
-      setIsAnimationActive(true); // Default to active while loading settings
+      setIsAnimationActive(true);
       return;
     }
 
-    // Conditions to show the animation:
-    // 1. It's the first visit of the session.
-    // 2. The user has the setting enabled.
+    // Once settings are loaded, determine if we should show the animation.
+    const isFirstVisit = !sessionStorage.getItem('playgate-session-started');
     const shouldShowAnimation = isFirstVisit && showLoadingScreen;
 
     if (!shouldShowAnimation) {
@@ -40,9 +36,10 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // If we're showing the animation, mark the session as started.
+    // If we are showing the animation, mark the session as started.
     sessionStorage.setItem('playgate-session-started', 'true');
     
+    // Start the progress timer.
     const startTime = Date.now();
     
     const interval = setInterval(() => {
@@ -52,7 +49,8 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
 
       if (currentProgress >= 100) {
         clearInterval(interval);
-        setTimeout(() => setIsAnimationActive(false), 500); // Short delay for animation to finish
+        // Add a small delay for the exit animation to complete smoothly.
+        setTimeout(() => setIsAnimationActive(false), 500); 
       }
     }, 50);
 
@@ -60,18 +58,16 @@ export function LoadingScreenProvider({ children }: { children: ReactNode }) {
     
   }, [showLoadingScreen, settingsLoading]);
   
-  // The actual loading state for the rest of the app.
-  // We consider it "loading" if the animation is active AND settings are done loading.
-  const isLoading = isAnimationActive && !settingsLoading;
-
+  // The app is considered "loading" if the animation is active.
+  const isLoading = isAnimationActive;
 
   return (
     <LoadingScreenContext.Provider value={{ isLoading }}>
         <AnimatePresence>
             {isLoading && <LoadingScreen progress={progress} />}
         </AnimatePresence>
-        {/* Render children immediately if settings are still loading or if animation is not active */}
-        {(settingsLoading || !isLoading) && children}
+        {/* Only render children when the animation is no longer active */}
+        {!isLoading && children}
     </LoadingScreenContext.Provider>
   );
 }
