@@ -1,9 +1,9 @@
 'use client';
 import { generateVideoThumbnail, getVideoDuration } from './utils';
-import type { VideoFile, VideoFileHandle } from './types';
+import type { VideoFile, VideoFileHandle, StoredVideoFile } from './types';
 
 const DB_NAME = 'WaizPlayDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented version due to schema change
 const VIDEO_STORE = 'videos';
 const FILE_HANDLE_STORE = 'fileHandles';
 
@@ -65,7 +65,7 @@ class IndexedDBManager {
             getVideoDuration(file),
         ]);
 
-        const videoData: Omit<VideoFile, 'video'> = {
+        const videoData: StoredVideoFile = {
           id,
           name: file.name,
           thumbnail,
@@ -73,6 +73,7 @@ class IndexedDBManager {
           lastPlayed: 0,
           createdAt: new Date(),
           favorited: false,
+          video: file, // Store the file blob itself
         };
         
         const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
@@ -84,10 +85,6 @@ class IndexedDBManager {
             handle: fileHandle,
           };
           tx.objectStore(FILE_HANDLE_STORE).put(videoFileHandle);
-        } else {
-            // If there's no handle, we might need to store the file itself
-            // For now, we assume we can get it again if needed, or that handles are preferred.
-            // If offline access without handles is critical, we might store the file blob here.
         }
 
         tx.oncomplete = () => resolve();
@@ -104,54 +101,52 @@ class IndexedDBManager {
       const tx = db.transaction(VIDEO_STORE, 'readonly');
       const store = tx.objectStore(VIDEO_STORE);
       const request = store.getAll();
-      request.onsuccess = () => resolve(request.result as VideoFile[]);
+      request.onsuccess = () => {
+        // We don't need the `video` blob for the grid view, so we can remove it to save memory
+        const videos = (request.result as StoredVideoFile[]).map(({ video, ...rest }) => rest);
+        resolve(videos);
+      }
       request.onerror = () => reject(request.error);
     });
   }
   
-  async getVideo(id: string): Promise<{ metadata: VideoFile, handle: FileSystemFileHandle | null } | null> {
+  async getVideo(id: string): Promise<{ metadata: VideoFile, handle: FileSystemFileHandle | null, file: File | null } | null> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readonly');
       const videoStore = tx.objectStore(VIDEO_STORE);
       const handleStore = tx.objectStore(FILE_HANDLE_STORE);
 
-      let metadata: VideoFile;
+      let videoData: StoredVideoFile;
       let handle: FileSystemFileHandle | null = null;
-      let handleFound = false;
+      let requestsCompleted = 0;
+      const totalRequests = 2;
+
+      const onComplete = () => {
+        if (++requestsCompleted < totalRequests) return;
+        
+        if (!videoData) {
+            resolve(null);
+            return;
+        }
+
+        const { video: videoFile, ...metadata } = videoData;
+        resolve({ metadata, handle, file: videoFile || null });
+      }
 
       const metadataRequest = videoStore.get(id);
       metadataRequest.onsuccess = () => {
-        metadata = metadataRequest.result;
-        if (!metadata) {
-          resolve(null);
-          return;
-        }
-        // If handle has been found or there was no handle to begin with, resolve.
-        if (handleFound || !handleStore) {
-            resolve({ metadata, handle });
-        }
+        videoData = metadataRequest.result;
+        onComplete();
       };
+      metadataRequest.onerror = () => reject(metadataRequest.error);
 
       const handleRequest = handleStore.get(id);
       handleRequest.onsuccess = () => {
         handle = handleRequest.result?.handle ?? null;
-        handleFound = true;
-        if (metadata) {
-            resolve({ metadata, handle });
-        }
+        onComplete();
       };
-      
-      tx.oncomplete = () => {
-        // This will be reached if one of the requests completes but the other doesn't find anything.
-        if (metadata && !handleFound) {
-          resolve({ metadata, handle: null });
-        } else if (!metadata) {
-          resolve(null);
-        }
-      }
-
-      tx.onerror = () => reject(tx.error);
+      handleRequest.onerror = () => reject(handleRequest.error);
     });
   }
 

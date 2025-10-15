@@ -8,6 +8,10 @@ export interface VideoFile {
   favorited: boolean;
 }
 
+export interface StoredVideoFile extends VideoFile {
+  video: File;
+}
+
 export interface VideoFileHandle {
   id: string;
   handle: FileSystemFileHandle;

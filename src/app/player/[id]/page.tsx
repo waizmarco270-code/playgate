@@ -35,20 +35,17 @@ export default function PlayerPage({ params }: { params: { id: string } }) {
 
         let file: File | null = null;
         if (videoData.handle) {
-          // Verify permission first
-          const options = { mode: 'read' };
+          const options = { mode: 'read' as const };
           if (await videoData.handle.queryPermission(options) !== 'granted') {
             if (await videoData.handle.requestPermission(options) !== 'granted') {
               throw new Error('Permission denied to access the video file.');
             }
           }
           file = await videoData.handle.getFile();
+        } else if (videoData.file) {
+           file = videoData.file;
         } else {
-           // This is a fallback if the handle is not available.
-           // It relies on re-fetching from a hidden input, which is not ideal.
-           // The primary method should be via FileSystemFileHandle.
-           // For this implementation, we cannot get the file without the handle.
-           throw new Error("Could not load video file. File handle is missing. Please re-import the video.");
+           throw new Error("Could not load video file. File data is missing. Please re-import the video.");
         }
         
         if (file) {
