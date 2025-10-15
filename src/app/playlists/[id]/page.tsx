@@ -1,11 +1,11 @@
 
 'use client';
-import { useEffect, useState, useCallback, use } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { notFound, useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Film, GripVertical, Play } from "lucide-react";
+import { ArrowLeft, Film, GripVertical, Play, Plus } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
@@ -20,6 +20,7 @@ export default function PlaylistDetailPage() {
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
     const router = useRouter();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const loadPlaylistDetails = useCallback(async () => {
         setLoading(true);
@@ -125,6 +126,48 @@ export default function PlaylistDetailPage() {
         }
     }
 
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files || files.length === 0 || !playlist) {
+            return;
+        }
+
+        try {
+            toast({
+                title: 'Importing...',
+                description: `Adding ${files.length} video(s) to "${playlist.name}".`,
+            });
+
+            for (const file of Array.from(files)) {
+                await db.addVideo(file, null);
+                // After adding to library, add to current playlist
+                const videoId = `${file.name}-${file.lastModified}`;
+                await db.addVideoToPlaylist(playlist.id, videoId);
+            }
+
+            toast({
+                title: 'Success',
+                description: `${files.length} video(s) imported and added to the playlist.`,
+            });
+            loadPlaylistDetails(); // Reload to show new videos
+        } catch (error) {
+            console.error('Failed to import videos:', error);
+            toast({
+                title: 'Import Failed',
+                description: 'Could not import videos. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            if(fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex flex-col h-full">
@@ -167,10 +210,24 @@ export default function PlaylistDetailPage() {
                         <p className="text-muted-foreground">{playlist.description || 'Drag and drop videos to reorder'}</p>
                     </div>
                 </div>
-                <Button onClick={handlePlayAll} disabled={videos.length === 0}>
-                    <Play className="mr-2 h-4 w-4" />
-                    Play All
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={handleImportClick}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Import
+                    </Button>
+                    <Button onClick={handlePlayAll} disabled={videos.length === 0}>
+                        <Play className="mr-2 h-4 w-4" />
+                        Play All
+                    </Button>
+                     <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        multiple
+                        accept="video/*,.mp4,.webm,.ogg,.mov,.avi,.mkv"
+                        className="hidden"
+                    />
+                </div>
             </header>
             <main className="flex-1 p-6 overflow-y-auto">
                 {videos.length === 0 ? (
@@ -179,10 +236,10 @@ export default function PlaylistDetailPage() {
                             <Film className="w-12 h-12 text-muted-foreground" />
                         </div>
                         <h2 className="text-2xl font-semibold">Playlist is Empty</h2>
-                        <p className="mt-2 text-muted-foreground">Add some videos to this playlist from your library.</p>
-                        <Link href="/">
-                            <Button className="mt-6">Go to Library</Button>
-                        </Link>
+                        <p className="mt-2 text-muted-foreground">Import your first video to this playlist.</p>
+                        <Button onClick={handleImportClick} className="mt-6">
+                            <Plus className="mr-2 h-4 w-4" /> Import Video
+                        </Button>
                     </div>
                 ) : (
                     <Reorder.Group 

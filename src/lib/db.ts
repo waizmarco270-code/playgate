@@ -99,7 +99,7 @@ class IndexedDBManager {
     return this.db!;
   }
 
-  async addVideo(file: File, fileHandle: FileSystemFileHandle | null): Promise<void> {
+  async addVideo(file: File, fileHandle: FileSystemFileHandle | null): Promise<VideoFile> {
     const db = await this.getDB();
     const id = `${file.name}-${file.lastModified}`;
 
@@ -137,7 +137,10 @@ class IndexedDBManager {
           tx.objectStore(FILE_HANDLE_STORE).put(videoFileHandle);
         }
 
-        tx.oncomplete = () => resolve();
+        tx.oncomplete = () => {
+            const { video, ...rest } = videoData;
+            resolve(rest);
+        };
         tx.onerror = () => reject(tx.error);
       } catch (error) {
         reject(error);
@@ -425,8 +428,9 @@ class IndexedDBManager {
 
   async addVideoToPlaylist(playlistId: string, videoId: string): Promise<void> {
     const playlist = await this.getPlaylist(playlistId);
-    if (playlist && !playlist.videoIds.includes(videoId)) {
-      playlist.videoIds.push(videoId);
+    if (playlist) {
+      // Prepend the new videoId
+      playlist.videoIds.unshift(videoId);
       await this.updatePlaylist(playlist);
     }
   }
