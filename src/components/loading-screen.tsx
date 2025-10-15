@@ -22,7 +22,16 @@ import { useTheme } from 'next-themes';
 
 const GridBackground = () => {
     const { resolvedTheme } = useTheme();
-    const isDark = resolvedTheme === 'dark';
+    const [isDark, setIsDark] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        setIsDark(resolvedTheme === 'dark');
+    }, [resolvedTheme]);
+
+
+    if (isDark === null) {
+        return <div className="absolute inset-0 z-0 h-full w-full"></div>;
+    }
 
     return (
         <div className={cn(
@@ -36,7 +45,11 @@ const GridBackground = () => {
 
 const GlitchyBits = () => {
     const { resolvedTheme } = useTheme();
-    const isDark = resolvedTheme === 'dark';
+     const [isDark, setIsDark] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        setIsDark(resolvedTheme === 'dark');
+    }, [resolvedTheme]);
 
     const bits = [
         { top: '10%', left: '15%', rotate: 15, scale: 0.8 },
@@ -46,6 +59,8 @@ const GlitchyBits = () => {
         { top: '40%', left: '5%', rotate: 30, scale: 0.75 },
         { top: '55%', left: '95%', rotate: -5, scale: 0.85 },
     ];
+
+    if (isDark === null) return null;
 
     return (
         <>
