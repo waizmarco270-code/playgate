@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { VideoGrid } from '@/components/video-grid';
 import { db } from '@/lib/db';
 import type { VideoFile } from '@/lib/types';
-import { Film, Plus, Search, Wind } from 'lucide-react';
+import { Film, Plus, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,6 +15,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadVideos = useCallback(async () => {
     setLoading(true);
@@ -37,40 +38,48 @@ export default function HomePage() {
     loadVideos();
   }, [loadVideos]);
 
-  const handleImport = async () => {
-    try {
-      const handles = await window.showOpenFilePicker({
-        multiple: true,
-        types: [{ description: 'Video Files', accept: { 'video/*': ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'] } }],
-      });
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
 
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    try {
       toast({
         title: 'Importing...',
-        description: `Processing ${handles.length} video(s). This may take a moment.`,
+        description: `Processing ${files.length} video(s). This may take a moment.`,
       });
 
-      for (const handle of handles) {
-        const file = await handle.getFile();
-        await db.addVideo(file, handle);
+      for (const file of Array.from(files)) {
+        // The concept of a FileSystemFileHandle doesn't exist with <input>, so we pass null.
+        // The db logic will need to be robust enough to handle this.
+        await db.addVideo(file, null);
       }
 
       toast({
         title: 'Success',
-        description: `${handles.length} video(s) imported successfully.`,
+        description: `${files.length} video(s) imported successfully.`,
       });
       loadVideos();
     } catch (error) {
-      if ((error as Error).name !== 'AbortError') {
-        console.error('Failed to import videos:', error);
-        toast({
-          title: 'Import Failed',
-          description: 'Could not import videos. Please try again.',
-          variant: 'destructive',
-        });
-      }
+      console.error('Failed to import videos:', error);
+      toast({
+        title: 'Import Failed',
+        description: 'Could not import videos. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+        // Reset the input value to allow selecting the same file again
+        if(fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
     }
   };
-  
+
   const onVideoDeleted = (videoId: string) => {
     setVideos(prev => prev.filter(v => v.id !== videoId));
     toast({
@@ -98,9 +107,17 @@ export default function HomePage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button onClick={handleImport}>
+          <Button onClick={handleImportClick}>
             <Plus className="mr-2 h-4 w-4" /> Import Video
           </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            multiple
+            accept="video/*,.mp4,.webm,.ogg,.mov,.avi,.mkv"
+            className="hidden"
+          />
         </div>
       </header>
       <main className="flex-1 p-6 overflow-y-auto">
@@ -123,7 +140,7 @@ export default function HomePage() {
             </div>
             <h2 className="text-2xl font-semibold">Your Library is Empty</h2>
             <p className="mt-2 text-muted-foreground">Import your first video to get started.</p>
-            <Button onClick={handleImport} className="mt-6">
+            <Button onClick={handleImportClick} className="mt-6">
               <Plus className="mr-2 h-4 w-4" /> Import Video
             </Button>
           </div>

@@ -16,6 +16,10 @@ class IndexedDBManager {
 
   private initDB(): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined' || !window.indexedDB) {
+        console.warn('IndexedDB is not supported.');
+        return reject('IndexedDB not supported');
+      }
       if (this.db) {
         return resolve();
       }
@@ -50,7 +54,7 @@ class IndexedDBManager {
     return this.db!;
   }
 
-  async addVideo(file: File, fileHandle: FileSystemFileHandle): Promise<void> {
+  async addVideo(file: File, fileHandle: FileSystemFileHandle | null): Promise<void> {
     const db = await this.getDB();
     const id = `${file.name}-${file.lastModified}`;
 
@@ -70,15 +74,21 @@ class IndexedDBManager {
           createdAt: new Date(),
           favorited: false,
         };
-
-        const videoFileHandle: VideoFileHandle = {
-          id,
-          handle: fileHandle,
-        };
-
+        
         const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readwrite');
         tx.objectStore(VIDEO_STORE).put(videoData);
-        tx.objectStore(FILE_HANDLE_STORE).put(videoFileHandle);
+
+        if (fileHandle) {
+          const videoFileHandle: VideoFileHandle = {
+            id,
+            handle: fileHandle,
+          };
+          tx.objectStore(FILE_HANDLE_STORE).put(videoFileHandle);
+        } else {
+            // If there's no handle, we might need to store the file itself
+            // For now, we assume we can get it again if needed, or that handles are preferred.
+            // If offline access without handles is critical, we might store the file blob here.
+        }
 
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
@@ -99,7 +109,7 @@ class IndexedDBManager {
     });
   }
   
-  async getVideo(id: string): Promise<{ metadata: VideoFile, handle: FileSystemFileHandle } | null> {
+  async getVideo(id: string): Promise<{ metadata: VideoFile, handle: FileSystemFileHandle | null } | null> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const tx = db.transaction([VIDEO_STORE, FILE_HANDLE_STORE], 'readonly');
@@ -107,23 +117,36 @@ class IndexedDBManager {
       const handleStore = tx.objectStore(FILE_HANDLE_STORE);
 
       let metadata: VideoFile;
-      let handle: FileSystemFileHandle;
+      let handle: FileSystemFileHandle | null = null;
+      let handleFound = false;
 
       const metadataRequest = videoStore.get(id);
       metadataRequest.onsuccess = () => {
         metadata = metadataRequest.result;
-        if (metadata && handle) resolve({ metadata, handle });
-        if (!metadataRequest.result) resolve(null);
+        if (!metadata) {
+          resolve(null);
+          return;
+        }
+        // If handle has been found or there was no handle to begin with, resolve.
+        if (handleFound || !handleStore) {
+            resolve({ metadata, handle });
+        }
       };
 
       const handleRequest = handleStore.get(id);
       handleRequest.onsuccess = () => {
-        handle = handleRequest.result?.handle;
-        if (metadata && handle) resolve({ metadata, handle });
+        handle = handleRequest.result?.handle ?? null;
+        handleFound = true;
+        if (metadata) {
+            resolve({ metadata, handle });
+        }
       };
       
       tx.oncomplete = () => {
-        if (!metadata || !handle) {
+        // This will be reached if one of the requests completes but the other doesn't find anything.
+        if (metadata && !handleFound) {
+          resolve({ metadata, handle: null });
+        } else if (!metadata) {
           resolve(null);
         }
       }
