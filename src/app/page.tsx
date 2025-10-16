@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { VideoGrid } from '@/components/video-grid';
 import { db } from '@/lib/db';
 import type { VideoFile } from '@/lib/types';
-import { Film, Plus, Search, CheckSquare, X, Trash2 } from 'lucide-react';
+import { Film, Plus, Search, CheckSquare, X, Trash2, LayoutGrid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -22,6 +22,8 @@ import { MoreVertical } from 'lucide-react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DeleteConfirmationDialog } from '@/components/delete-confirmation-dialog';
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const Header = ({
     onImportClick,
@@ -29,12 +31,16 @@ const Header = ({
     searchTerm,
     videos,
     onVideosDeleted,
+    layout,
+    onLayoutChange,
 }: {
     onImportClick: () => void;
     onSearchTermChange: (term: string) => void;
     searchTerm: string;
     videos: VideoFile[];
     onVideosDeleted: () => void;
+    layout: 'grid' | 'list';
+    onLayoutChange: (layout: 'grid' | 'list') => void;
 }) => {
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedVideoIds, setSelectedVideoIds] = useState<Set<string>>(new Set());
@@ -89,6 +95,43 @@ const Header = ({
             return newSet;
         });
     }, [videos]);
+    
+    const ViewSwitcher = () => (
+      <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={layout === 'grid' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onLayoutChange('grid')}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Grid View</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+               <Button
+                variant={layout === 'list' ? 'secondary' : 'ghost'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onLayoutChange('list')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>List View</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    );
 
     return (
         <>
@@ -118,6 +161,7 @@ const Header = ({
                                     onChange={(e) => onSearchTermChange(e.target.value)}
                                 />
                             </div>
+                            {!isMobile && <ViewSwitcher />}
                             {isMobile ? (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -206,6 +250,7 @@ export default function HomePage() {
   const [allVideos, setAllVideos] = useState<VideoFile[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [layout, setLayout] = useState<'grid' | 'list'>('grid');
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -302,6 +347,8 @@ export default function HomePage() {
         searchTerm={searchTerm}
         videos={allVideos}
         onVideosDeleted={onVideoDeletedOrUpdated}
+        layout={layout}
+        onLayoutChange={setLayout}
       />
        <input
           type="file"
@@ -314,7 +361,7 @@ export default function HomePage() {
       
       <main className="flex-1 p-6 overflow-y-auto">
         {loading ? (
-            <VideoGrid>
+            <VideoGrid layout={layout}>
                 {Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="flex flex-col space-y-3">
                     <Skeleton className="h-[125px] w-full rounded-xl" />
@@ -345,12 +392,13 @@ export default function HomePage() {
                 <p className="mt-2 text-muted-foreground text-center">No videos match your search term "{searchTerm}".</p>
             </div>
         ) : (
-            <VideoGrid>
+            <VideoGrid layout={layout}>
                 <VideoGrid.Content 
                     videos={filteredVideos} 
                     onVideoDeleted={onVideoDeletedOrUpdated}
                     onVideoUpdated={onVideoDeletedOrUpdated}
                     context="library"
+                    layout={layout}
                 />
             </VideoGrid>
         )}
@@ -367,3 +415,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

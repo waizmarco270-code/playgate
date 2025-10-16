@@ -162,7 +162,7 @@ export function VaultContent() {
             </header>
              <main className="flex-1 p-6 overflow-y-auto">
                 {loading ? (
-                <VideoGrid>
+                <VideoGrid layout="grid">
                     {Array.from({ length: 4 }).map((_, i) => (
                     <div key={i} className="flex flex-col space-y-3">
                         <Skeleton className="h-[125px] w-full rounded-xl" />
@@ -182,12 +182,13 @@ export function VaultContent() {
                     <p className="mt-2 text-muted-foreground">Move videos from your library to the vault to protect them.</p>
                 </div>
                 ) : (
-                <VideoGrid>
+                <VideoGrid layout="grid">
                     <VideoGrid.Content 
                         videos={videos} 
                         onVideoDeleted={onVideoDeleted}
                         onVideoUpdated={onVideoUpdated}
                         context="vault"
+                        layout="grid"
                         isSelectionMode={isSelectionMode}
                         selectedVideoIds={selectedVideoIds}
                         onVideoSelect={handleVideoSelect}
@@ -208,3 +209,5 @@ export function VaultContent() {
     );
 
 }
+
+    

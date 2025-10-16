@@ -128,14 +128,14 @@ export function VideoCard({
           )}>
             <CardContent className="p-0">
               <div className="flex items-center">
-                {!isSelectionMode && context === 'playlist' && (
-                  <div className="hidden md:block pl-2 text-muted-foreground cursor-grab active:cursor-grabbing">
-                      <GripVertical />
-                  </div>
+                {context === 'playlist' && (
+                    <div className="pl-2 text-muted-foreground cursor-grab active:cursor-grabbing hidden md:block">
+                        <GripVertical />
+                    </div>
                 )}
                 <div className="relative flex-shrink-0">
                   <Wrapper {...wrapperProps} className="flex-shrink-0">
-                    <div className="relative aspect-video w-48 bg-secondary">
+                    <div className="relative aspect-video w-32 md:w-48 bg-secondary">
                       {thumbnailUrl ? (
                         <Image
                           src={thumbnailUrl}
@@ -408,3 +408,5 @@ export function VideoCard({
     </>
   );
 }
+
+    
