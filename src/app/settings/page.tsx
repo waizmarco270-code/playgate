@@ -9,21 +9,73 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { HardDriveDownload, HardDriveUpload, Trash2, ShieldCheck, Database, KeyRound, Download } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion"
-import { usePwaInstall } from '@/components/pwa-install-prompt';
+} from "@/components/ui/accordion";
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const { toast } = useToast();
     const importInputRef = useRef<HTMLInputElement>(null);
-    const { install, canInstall } = usePwaInstall();
+    
+    const [installPromptEvent, setInstallPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+    const [canInstall, setCanInstall] = useState(false);
+
+    useEffect(() => {
+      const handleBeforeInstallPrompt = (event: Event) => {
+        event.preventDefault();
+        const typedEvent = event as BeforeInstallPromptEvent;
+        
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+          return;
+        }
+        
+        setInstallPromptEvent(typedEvent);
+        setCanInstall(true);
+      };
+
+      window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+      return () => {
+        window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      };
+    }, []);
+
+    const handleInstallClick = async () => {
+      if (!installPromptEvent) return;
+      try {
+        await installPromptEvent.prompt();
+        const { outcome } = await installPromptEvent.userChoice;
+        if (outcome === 'accepted') {
+          toast({
+              title: "Installation Complete!",
+              description: "PlayGate has been added to your home screen."
+          });
+        }
+        setCanInstall(false);
+      } catch (error) {
+          toast({
+              title: "Installation Failed",
+              description: "Something went wrong during installation.",
+              variant: "destructive"
+          });
+      } finally {
+          setInstallPromptEvent(null);
+      }
+    };
 
     const handleReset = async () => {
         if(confirm('Are you sure you want to delete all your data? This action cannot be undone.')) {
@@ -188,7 +240,7 @@ export default function SettingsPage() {
                                         <h3 className="font-semibold">Install App</h3>
                                         <p className="text-sm text-muted-foreground">Install PlayGate on your device for a native app experience.</p>
                                     </div>
-                                    <Button variant="outline" onClick={install}>
+                                    <Button variant="outline" onClick={handleInstallClick}>
                                         <Download className="mr-2 h-4 w-4" />
                                         Install
                                     </Button>
@@ -247,5 +299,3 @@ export default function SettingsPage() {
         </div>
     );
 }
-
-    
