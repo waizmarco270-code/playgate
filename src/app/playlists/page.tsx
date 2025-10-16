@@ -4,13 +4,21 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
 import type { Playlist } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { FolderKanban, Plus, Film, FolderDown } from "lucide-react";
+import { FolderKanban, Plus, Film, FolderDown, MoreVertical } from "lucide-react";
 import { PlaylistCard } from '@/components/playlist-card';
 import { CreatePlaylistDialog } from '@/components/create-playlist-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { FileSystemFileHandle } from 'wicg-file-system-access';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 const ACCEPTED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-matroska'];
 
@@ -19,6 +27,8 @@ export default function PlaylistsPage() {
     const [loading, setLoading] = useState(true);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const { toast } = useToast();
+    const isMobile = useIsMobile();
+
 
     const loadPlaylists = async () => {
         setLoading(true);
@@ -133,12 +143,32 @@ export default function PlaylistsPage() {
                 <h1 className="text-2xl font-bold">Playlists</h1>
             </div>
             <div className="flex items-center gap-2">
-                 <Button variant="outline" onClick={handleImportFolder}>
-                    <FolderDown className="mr-2 h-4 w-4" /> Import Folder
-                </Button>
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" /> Create Playlist
-                </Button>
+                 {isMobile ? (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <MoreVertical />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={handleImportFolder}>
+                                <FolderDown className="mr-2 h-4 w-4" /> Import Folder
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setIsCreateDialogOpen(true)}>
+                                <Plus className="mr-2 h-4 w-4" /> Create Playlist
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ) : (
+                    <>
+                        <Button variant="outline" onClick={handleImportFolder}>
+                            <FolderDown className="mr-2 h-4 w-4" /> Import Folder
+                        </Button>
+                        <Button onClick={() => setIsCreateDialogOpen(true)}>
+                            <Plus className="mr-2 h-4 w-4" /> Create Playlist
+                        </Button>
+                    </>
+                 )}
             </div>
         </header>
         <main className="flex-1 p-6 overflow-y-auto">
