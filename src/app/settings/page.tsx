@@ -10,11 +10,20 @@ import { useToast } from '@/hooks/use-toast';
 import { db } from '@/lib/db';
 import { HardDriveDownload, HardDriveUpload, Trash2, ShieldCheck, Database, KeyRound, Download } from 'lucide-react';
 import { useRef } from 'react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { usePwaInstall } from '@/components/pwa-install-prompt';
+
 
 export default function SettingsPage() {
     const { theme, setTheme } = useTheme();
     const { toast } = useToast();
     const importInputRef = useRef<HTMLInputElement>(null);
+    const { install, canInstall } = usePwaInstall();
 
     const handleReset = async () => {
         if(confirm('Are you sure you want to delete all your data? This action cannot be undone.')) {
@@ -130,41 +139,61 @@ export default function SettingsPage() {
                     </Card>
 
                     <Card>
-                        <CardHeader>
-                            <CardTitle>Privacy & Security</CardTitle>
-                            <CardDescription>How your data is stored and secured.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                             <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
-                                <Database className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
-                                <div>
-                                    <h3 className="font-semibold">100% Local Data Storage</h3>
-                                    <p className="text-sm text-muted-foreground">All your data, including video files, playlists, and metadata, is stored exclusively on your device using your browser's IndexedDB. Nothing is ever uploaded to a server, ensuring your privacy is completely protected.</p>
-                                </div>
-                            </div>
-                             <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
-                                <ShieldCheck className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
-                                <div>
-                                    <h3 className="font-semibold">Secure Vault Encryption</h3>
-                                    <p className="text-sm text-muted-foreground">Videos moved to the Vault are encrypted. Your Vault password is used to generate a key that encrypts this data. The password is only stored as a secure hash on your device.</p>
-                                </div>
-                            </div>
-                             <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
-                                <KeyRound className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
-                                <div>
-                                    <h3 className="font-semibold">Password Recovery</h3>
-                                    <p className="text-sm text-muted-foreground">Because your password is not stored on any server, it cannot be traditionally recovered. If you forget it, you must use the "Reset Password" feature, which requires contacting the developer with a unique support code to get an unlock key. **Store your password safely!**</p>
-                                </div>
-                            </div>
-                        </CardContent>
+                        <Accordion type="single" collapsible>
+                            <AccordionItem value="item-1" className="border-b-0">
+                                <AccordionTrigger className="p-6 hover:no-underline">
+                                     <CardHeader className="p-0 text-left">
+                                        <CardTitle>Privacy & Security</CardTitle>
+                                        <CardDescription>How your data is stored and secured.</CardDescription>
+                                    </CardHeader>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <CardContent className="space-y-4 pt-0">
+                                        <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
+                                            <Database className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                                            <div>
+                                                <h3 className="font-semibold">100% Local Data Storage</h3>
+                                                <p className="text-sm text-muted-foreground">All your data, including video files, playlists, and metadata, is stored exclusively on your device using your browser's IndexedDB. Nothing is ever uploaded to a server, ensuring your privacy is completely protected.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
+                                            <ShieldCheck className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                                            <div>
+                                                <h3 className="font-semibold">Secure Vault Encryption</h3>
+                                                <p className="text-sm text-muted-foreground">Videos moved to the Vault are encrypted. Your Vault password is used to generate a key that encrypts this data. The password is only stored as a secure hash on your device.</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-4 p-4 border rounded-lg bg-secondary/30">
+                                            <KeyRound className="h-6 w-6 mt-1 text-primary flex-shrink-0" />
+                                            <div>
+                                                <h3 className="font-semibold">Password Recovery</h3>
+                                                <p className="text-sm text-muted-foreground">Because your password is not stored on any server, it cannot be traditionally recovered. If you forget it, you must use the "Reset Password" feature, which requires contacting the developer with a unique support code to get an unlock key. **Store your password safely!**</p>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
                     </Card>
-
+                    
                     <Card>
                         <CardHeader>
                             <CardTitle>Data Management</CardTitle>
-                            <CardDescription>Manage your local application data.</CardDescription>
+                            <CardDescription>Manage your local application data and installation.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                             {canInstall && (
+                                <div className="flex items-center justify-between p-4 border rounded-lg">
+                                    <div>
+                                        <h3 className="font-semibold">Install App</h3>
+                                        <p className="text-sm text-muted-foreground">Install PlayGate on your device for a native app experience.</p>
+                                    </div>
+                                    <Button variant="outline" onClick={install}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Install
+                                    </Button>
+                                </div>
+                            )}
                              <div className="flex items-center justify-between p-4 border rounded-lg">
                                 <div>
                                     <h3 className="font-semibold">Export Data</h3>
@@ -218,3 +247,5 @@ export default function SettingsPage() {
         </div>
     );
 }
+
+    
