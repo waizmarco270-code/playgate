@@ -40,6 +40,7 @@ export default function PlayerPage() {
   const [error, setError] = useState<string | null>(null);
   const [playbackRate, setPlaybackRate] = useState('1');
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
+  const [playlistVideos, setPlaylistVideos] = useState<VideoFile[]>([]);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(-1);
   const [libraryVideos, setLibraryVideos] = useState<VideoFile[]>([]);
 
@@ -120,6 +121,8 @@ export default function PlayerPage() {
             const playlistData = await db.getPlaylist(playlistId);
             if (playlistData) {
                 setPlaylist(playlistData);
+                const playlistVideoDetails = await db.getVideosByIds(playlistData.videoIds);
+                setPlaylistVideos(playlistVideoDetails);
                 const index = playlistData.videoIds.indexOf(params.id);
                 setCurrentVideoIndex(index);
             }
@@ -584,12 +587,12 @@ export default function PlayerPage() {
             />
           )}
         </div>
-        {!playlistId && libraryVideos.length > 1 && (
-            <UpNext videos={libraryVideos} currentVideoId={videoMetadata.id} />
-        )}
+        {playlistId && playlistVideos.length > 0 ? (
+            <UpNext title="My Playlist" videos={playlistVideos} currentVideoId={videoMetadata.id} playlistId={playlistId} />
+        ) : !playlistId && libraryVideos.length > 1 ? (
+            <UpNext title="My Library" videos={libraryVideos} currentVideoId={videoMetadata.id} />
+        ) : null}
       </main>
     </div>
   );
 }
-
-    

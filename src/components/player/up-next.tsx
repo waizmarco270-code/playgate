@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 
-const UpNextCard = ({ video, isCurrent }: { video: VideoFile, isCurrent: boolean }) => {
+const UpNextCard = ({ video, isCurrent, playlistId }: { video: VideoFile, isCurrent: boolean, playlistId?: string }) => {
     const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
 
     useEffect(() => {
@@ -29,8 +29,10 @@ const UpNextCard = ({ video, isCurrent }: { video: VideoFile, isCurrent: boolean
         };
     }, [video.thumbnail]);
 
+    const href = playlistId ? `/player/${video.id}?playlist=${playlistId}` : `/player/${video.id}`;
+
     return (
-        <Link href={`/player/${video.id}`} className="block group">
+        <Link href={href} className="block group">
             <div className={cn(
                 "relative aspect-video rounded-lg overflow-hidden transition-all border-2",
                 isCurrent ? "border-primary shadow-lg shadow-primary/40" : "border-transparent"
@@ -59,25 +61,26 @@ const UpNextCard = ({ video, isCurrent }: { video: VideoFile, isCurrent: boolean
 }
 
 
-export const UpNext = ({ videos, currentVideoId }: { videos: VideoFile[], currentVideoId: string }) => {
+export const UpNext = ({ videos, currentVideoId, title, playlistId }: { videos: VideoFile[], currentVideoId: string, title: string, playlistId?: string }) => {
 
     const currentVideoIndex = videos.findIndex(v => v.id === currentVideoId);
 
     return (
         <div className="w-full max-w-6xl p-4 md:p-6 bg-black/50">
-            <h3 className="text-lg font-bold text-white mb-4">My Library</h3>
+            <h3 className="text-lg font-bold text-white mb-4">{title}</h3>
             <Carousel
                 opts={{
                     align: "start",
                     dragFree: true,
                     skipSnaps: true,
+                    startIndex: currentVideoIndex > 0 ? currentVideoIndex - 1 : 0
                 }}
                 className="w-full"
             >
                 <CarouselContent className="-ml-4">
                     {videos.map((video, index) => (
                     <CarouselItem key={video.id} className="basis-1/3 sm:basis-1/4 md:basis-1/5 lg:basis-1/6 pl-4">
-                       <UpNextCard video={video} isCurrent={video.id === currentVideoId} />
+                       <UpNextCard video={video} isCurrent={video.id === currentVideoId} playlistId={playlistId} />
                     </CarouselItem>
                     ))}
                 </CarouselContent>
@@ -85,5 +88,3 @@ export const UpNext = ({ videos, currentVideoId }: { videos: VideoFile[], curren
         </div>
     )
 }
-
-    
