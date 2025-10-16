@@ -5,7 +5,7 @@ import { notFound, useRouter, useParams } from 'next/navigation';
 import { db } from '@/lib/db';
 import type { Playlist, VideoFile } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Film, GripVertical, Play, Plus, CheckSquare, X, Trash2, MoreVertical } from "lucide-react";
+import { ArrowLeft, Film, Play, Plus, CheckSquare, X, Trash2, MoreVertical } from "lucide-react";
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Reorder, AnimatePresence, motion } from 'framer-motion';
@@ -248,157 +248,159 @@ export default function PlaylistDetailPage() {
 
     return (
         <>
-        <div className="flex flex-col h-full">
-            <header className="relative flex items-center justify-between gap-4 p-4 border-b overflow-hidden h-[89px]">
-                <AnimatePresence>
-                    {!isSelectionMode && (
-                        <motion.div
-                            key="playlist-header"
-                            initial={{ opacity: 0, x: -50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -50 }}
-                            transition={{ duration: 0.3, ease: 'easeInOut' }}
-                            className="absolute inset-0 p-4 flex items-center justify-between gap-4"
-                        >
-                            <div className="flex items-center gap-2 min-w-0">
-                                <SidebarTrigger className="md:hidden" />
-                                <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')} className="hidden md:inline-flex">
-                                    <ArrowLeft />
-                                </Button>
-                                <div className="flex-1 min-w-0">
-                                    <h1 className="text-2xl font-bold truncate">{playlist.name}</h1>
-                                    <p className="text-muted-foreground truncate text-sm">{playlist.description || 'Drag and drop videos to reorder'}</p>
+            <div className="flex flex-col h-full">
+                <header className="relative flex items-center justify-between gap-4 p-4 border-b overflow-hidden h-[89px]">
+                    <AnimatePresence>
+                        {!isSelectionMode && (
+                            <motion.div
+                                key="playlist-header"
+                                initial={{ opacity: 0, x: -50 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -50 }}
+                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                className="absolute inset-0 p-4 flex items-center justify-between gap-4"
+                            >
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <SidebarTrigger className="md:hidden" />
+                                    <Button variant="ghost" size="icon" onClick={() => router.push('/playlists')} className="hidden md:inline-flex">
+                                        <ArrowLeft />
+                                    </Button>
+                                    <div className="flex-1 min-w-0">
+                                        <h1 className="text-2xl font-bold truncate">{playlist.name}</h1>
+                                        <p className="text-muted-foreground truncate text-sm">{playlist.description || 'Drag and drop videos to reorder'}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                                {isMobile ? (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" size="icon">
-                                                <MoreVertical />
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    {isMobile ? (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" size="icon">
+                                                    <MoreVertical />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onSelect={handleImportClick}>
+                                                    <Plus className="mr-2 h-4 w-4" /> Import
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={toggleSelectionMode}>
+                                                    <CheckSquare className="mr-2 h-4 w-4" /> Select
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onSelect={handlePlayAll} disabled={videos.length === 0}>
+                                                    <Play className="mr-2 h-4 w-4" /> Play All
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : (
+                                        <>
+                                            <Button variant="outline" onClick={handleImportClick}>
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Import
                                             </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onSelect={handleImportClick}>
-                                                <Plus className="mr-2 h-4 w-4" /> Import
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={toggleSelectionMode}>
-                                                <CheckSquare className="mr-2 h-4 w-4" /> Select
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={handlePlayAll} disabled={videos.length === 0}>
-                                                <Play className="mr-2 h-4 w-4" /> Play All
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                ) : (
-                                    <>
-                                        <Button variant="outline" onClick={handleImportClick}>
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Import
-                                        </Button>
-                                        <Button variant="outline" onClick={toggleSelectionMode}>
-                                            <CheckSquare className="mr-2 h-4 w-4" />
-                                            Select
-                                        </Button>
-                                        <Button onClick={handlePlayAll} disabled={videos.length === 0}>
-                                            <Play className="mr-2 h-4 w-4" />
-                                            Play All
-                                        </Button>
-                                    </>
-                                )}
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    multiple
-                                    accept="video/*,.mp4,.webm,.ogg,.mov,.avi,.mkv"
-                                    className="hidden"
-                                />
+                                            <Button variant="outline" onClick={toggleSelectionMode}>
+                                                <CheckSquare className="mr-2 h-4 w-4" />
+                                                Select
+                                            </Button>
+                                            <Button onClick={handlePlayAll} disabled={videos.length === 0}>
+                                                <Play className="mr-2 h-4 w-4" />
+                                                Play All
+                                            </Button>
+                                        </>
+                                    )}
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleFileChange}
+                                        multiple
+                                        accept="video/*,.mp4,.webm,.ogg,.mov,.avi,.mkv"
+                                        className="hidden"
+                                    />
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                     <AnimatePresence>
+                        {isSelectionMode && (
+                        <motion.div
+                            key="selection-header"
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 50 }}
+                            transition={{ duration: 0.3, ease: 'easeInOut' }}
+                            className="absolute inset-0 p-4 flex items-center justify-between bg-secondary"
+                        >
+                            <div className="flex items-center gap-4">
+                                <Button variant="ghost" size="icon" onClick={toggleSelectionMode}>
+                                    <X />
+                                </Button>
+                                <h2 className="text-lg font-semibold">{selectedVideoIds.size} video(s) selected</h2>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setIsBulkDeleteDialogOpen(true)}
+                                    disabled={selectedVideoIds.size === 0}
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Remove from Playlist
+                                </Button>
                             </div>
                         </motion.div>
-                    )}
-                </AnimatePresence>
-                 <AnimatePresence>
-                    {isSelectionMode && (
-                    <motion.div
-                        key="selection-header"
-                        initial={{ opacity: 0, y: 50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 50 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
-                        className="absolute inset-0 p-4 flex items-center justify-between bg-secondary"
-                    >
-                        <div className="flex items-center gap-4">
-                            <Button variant="ghost" size="icon" onClick={toggleSelectionMode}>
-                                <X />
-                            </Button>
-                            <h2 className="text-lg font-semibold">{selectedVideoIds.size} video(s) selected</h2>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="destructive"
-                                onClick={() => setIsBulkDeleteDialogOpen(true)}
-                                disabled={selectedVideoIds.size === 0}
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" /> Remove from Playlist
+                        )}
+                    </AnimatePresence>
+                </header>
+                <main className="flex-1 p-6 overflow-y-auto">
+                    {videos.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center">
+                            <div className="p-6 rounded-full bg-secondary mb-4">
+                                <Film className="w-12 h-12 text-muted-foreground" />
+                            </div>
+                            <h2 className="text-2xl font-semibold">Playlist is Empty</h2>
+                            <p className="mt-2 text-muted-foreground">Import your first video to this playlist.</p>
+                            <Button onClick={handleImportClick} className="mt-6">
+                                <Plus className="mr-2 h-4 w-4" /> Import Video
                             </Button>
                         </div>
-                    </motion.div>
+                    ) : (
+                        <Reorder.Group 
+                            axis="y" 
+                            values={videos} 
+                            onReorder={handleReorder}
+                            className="space-y-4 max-w-4xl mx-auto"
+                        >
+                           {videos.map(video => (
+                               <Reorder.Item 
+                                    key={video.id} 
+                                    value={video} 
+                                    className="relative"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                               >
+                                   <VideoCard
+                                        video={video}
+                                        onVideoDeleted={onVideoDeletedFromLibrary} 
+                                        onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
+                                        onVideoUpdated={onVideoUpdated}
+                                        context="playlist"
+                                        playlistId={playlist.id}
+                                        layout="list"
+                                        isSelectionMode={isSelectionMode}
+                                        isSelected={selectedVideoIds.has(video.id)}
+                                        onSelect={handleVideoSelect}
+                                   />
+                               </Reorder.Item>
+                           ))}
+                        </Reorder.Group>
                     )}
-                </AnimatePresence>
-            </header>
-            <main className="flex-1 p-6 overflow-y-auto">
-                {videos.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center">
-                        <div className="p-6 rounded-full bg-secondary mb-4">
-                            <Film className="w-12 h-12 text-muted-foreground" />
-                        </div>
-                        <h2 className="text-2xl font-semibold">Playlist is Empty</h2>
-                        <p className="mt-2 text-muted-foreground">Import your first video to this playlist.</p>
-                        <Button onClick={handleImportClick} className="mt-6">
-                            <Plus className="mr-2 h-4 w-4" /> Import Video
-                        </Button>
-                    </div>
-                ) : (
-                    <Reorder.Group 
-                        axis="y" 
-                        values={videos} 
-                        onReorder={handleReorder}
-                        className="space-y-4 max-w-4xl mx-auto"
-                    >
-                       {videos.map(video => (
-                           <Reorder.Item 
-                                key={video.id} 
-                                value={video} 
-                                className="relative"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                           >
-                               <VideoCard
-                                    video={video}
-                                    onVideoDeleted={onVideoDeletedFromLibrary} 
-                                    onVideoRemovedFromPlaylist={handleRemoveVideoFromPlaylist}
-                                    onVideoUpdated={onVideoUpdated}
-                                    context="playlist"
-                                    playlistId={playlist.id}
-                                    layout="list"
-                                    isSelectionMode={isSelectionMode}
-                                    isSelected={selectedVideoIds.has(video.id)}
-                                    onSelect={handleVideoSelect}
-                               />
-                           </Reorder.Item>
-                       ))}
-                    </Reorder.Group>
-                )}
-            </main>
-        </div>
-         <DeleteConfirmationDialog 
-            isOpen={isBulkDeleteDialogOpen}
-            onOpenChange={setIsBulkDeleteDialogOpen}
-            onConfirm={handleBulkRemoveFromPlaylist}
-            itemName={`${selectedVideoIds.size} videos from this playlist`}
-        />
+                </main>
+            </div>
+            <DeleteConfirmationDialog 
+                isOpen={isBulkDeleteDialogOpen}
+                onOpenChange={setIsBulkDeleteDialogOpen}
+                onConfirm={handleBulkRemoveFromPlaylist}
+                itemName={`${selectedVideoIds.size} videos from this playlist`}
+            />
         </>
     );
 }
+
+    
