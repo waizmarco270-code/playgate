@@ -278,7 +278,7 @@ export default function HomePage() {
     await handleFiles(Array.from(files));
   };
   
-  const handleFiles = async (files: File[]) => {
+  const handleFiles = useCallback(async (files: File[]) => {
       setLoading(true);
       try {
         toast({
@@ -308,7 +308,7 @@ export default function HomePage() {
           }
           setLoading(false);
       }
-  }
+  }, [loadVideos, toast]);
 
 
   useEffect(() => {
@@ -320,12 +320,13 @@ export default function HomePage() {
         if (!launchParams.files || launchParams.files.length === 0) {
           return;
         }
-        const files = await Promise.all(launchParams.files.map((handle: any) => handle.getFile()));
+        const fileHandles = launchParams.files;
+        const files = await Promise.all(fileHandles.map((handle: any) => handle.getFile()));
         await handleFiles(files);
       });
     }
 
-  }, [loadVideos]);
+  }, [loadVideos, handleFiles]);
 
   const handleImportClick = () => {
     fileInputRef.current?.click();
