@@ -30,6 +30,7 @@ import {
 import { useInterval } from 'usehooks-ts';
 import { useIsMobile } from '@/hooks/use-mobile';
 import React from 'react';
+import { UpNext } from '@/components/player/up-next';
 
 export default function PlayerPage() {
   const params = useParams<{ id: string }>();
@@ -40,6 +41,7 @@ export default function PlayerPage() {
   const [playbackRate, setPlaybackRate] = useState('1');
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(-1);
+  const [libraryVideos, setLibraryVideos] = useState<VideoFile[]>([]);
 
   // States for audio and subtitle tracks
   const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
@@ -121,6 +123,10 @@ export default function PlayerPage() {
                 const index = playlistData.videoIds.indexOf(params.id);
                 setCurrentVideoIndex(index);
             }
+        } else {
+            // If not in a playlist, load library videos for "Up Next"
+            const allLibraryVideos = await db.getAllVideos(videoData.metadata.isVaulted);
+            setLibraryVideos(allLibraryVideos);
         }
 
       } catch (err: any) {
@@ -352,7 +358,7 @@ export default function PlayerPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col h-screen bg-background">
         <header className="p-4 flex items-center gap-4 border-b">
           <Skeleton className="h-10 w-10" />
           <div className="flex-1 space-y-2">
@@ -369,7 +375,7 @@ export default function PlayerPage() {
 
   if (error) {
     return (
-        <div className="p-6 max-w-4xl mx-auto text-center">
+        <div className="p-6 max-w-4xl mx-auto text-center h-full flex flex-col justify-center items-center">
             <h1 className="text-2xl font-bold text-destructive mb-4">Error</h1>
             <p className="text-muted-foreground mb-4">{error}</p>
             <Button onClick={() => router.push('/')}>
@@ -541,7 +547,7 @@ export default function PlayerPage() {
   )
 
   return (
-    <div className="flex flex-col h-full bg-background text-foreground">
+    <div className="flex flex-col h-screen bg-background text-foreground">
       <header className="p-2 md:p-4 flex items-center gap-2 border-b shrink-0">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft />
@@ -563,7 +569,7 @@ export default function PlayerPage() {
             {isMobile ? <MobileControls /> : <DesktopControls />}
         </div>
       </header>
-      <main className="flex-1 flex items-center justify-center p-0 md:p-4 bg-black/90" ref={playerContainerRef}>
+      <main className="flex-1 flex flex-col items-center justify-center p-0 md:p-4 bg-black/90" ref={playerContainerRef}>
         <div className="w-full h-full max-w-6xl md:aspect-video md:rounded-lg overflow-hidden shadow-2xl shadow-black/50">
           {videoUrl && (
             <video
@@ -578,7 +584,12 @@ export default function PlayerPage() {
             />
           )}
         </div>
+        {!playlistId && libraryVideos.length > 1 && (
+            <UpNext videos={libraryVideos} currentVideoId={videoMetadata.id} />
+        )}
       </main>
     </div>
   );
 }
+
+    
